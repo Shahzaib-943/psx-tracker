@@ -1,0 +1,4 @@
+#y_dataTables {
+    width: 100%;
+    table-layout: auto; /* Allow columns to adjust to content */
+}
