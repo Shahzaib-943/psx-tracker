@@ -97,7 +97,7 @@
     <script>
         window.appConfig = {
             userRole: @json(auth()->user()->getRoleNames()->first()),
-            ADMIN: @json(\App\Models\User::ROLE_ADMIN),
+            ADMIN: @json(\App\Constants\AppConstant::ROLE_ADMIN),
         };
     </script>
     <!-- inject:js -->

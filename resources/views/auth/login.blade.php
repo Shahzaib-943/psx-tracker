@@ -12,9 +12,11 @@
                                 <div class="col-md-12 ps-md-0">
                                     <div class="auth-form-wrapper px-4 py-5">
                                         <a href="{{ route('home') }}"
-                                            class="noble-ui-logo d-block mb-2">Fiscal<span>Ease</span></a>
+                                            {{-- class="noble-ui-logo d-block mb-2">Fiscal<span>Ease</span></a> --}}
+                                            class="noble-ui-logo d-block mb-2">{{ \App\Constants\AppConstant::APP_FIRST_NAME }}<span>{{ \App\Constants\AppConstant::APP_SECOND_NAME }}</span></a>
                                         <h5 class="text-muted fw-normal mb-4">Welcome to {{ config('app.name') }}! 👋</h5>
-                                        <h5 class="text-muted fw-normal mb-4">Sign in to your account and take control of your finances today!</h5>
+                                        {{-- <h5 class="text-muted fw-normal mb-4">Sign in to your account and take control of your finances today!</h5> --}}
+                                        <h5 class="text-muted fw-normal mb-4">{{ \App\Constants\AppConstant::LANDING_PAGE_DESC }}</h5>
                                         <form id="loginForm" class="forms-sample" method="POST"
                                             action="{{ route('login') }}">
                                             @csrf

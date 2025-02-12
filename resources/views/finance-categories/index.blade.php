@@ -16,7 +16,7 @@
                                     <th>#</th>
                                     <th>Name</th>
                                     <th>Type</th>
-                                    @role(\App\Models\User::ROLE_ADMIN)
+                                    @role(\App\Constants\AppConstant::ROLE_ADMIN)
                                         <th id="user-column-header">User</th>
                                         <th id="is_common-column">Is Common</th>
                                     @endrole
@@ -35,7 +35,7 @@
     <script>
         $(document).ready(function() {
             let userRole = @json(auth()->user()->getRoleNames()->first());
-            const ADMIN = @json(\App\Models\User::ROLE_ADMIN);
+            const ADMIN = @json(\App\Constants\AppConstant::ROLE_ADMIN);
             columns = [{
                     data: 'DT_RowIndex',
                     name: 'DT_RowIndex',

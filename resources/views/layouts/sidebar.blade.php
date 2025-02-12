@@ -1,7 +1,7 @@
 <nav class="sidebar">
     <div class="sidebar-header">
         <a href="{{ route('home') }}" class="sidebar-brand">
-            Fiscal<span>Ease</span>
+            {{ \App\Constants\AppConstant::APP_FIRST_NAME }}<span>{{ \App\Constants\AppConstant::APP_SECOND_NAME }}</span>
         </a>
         <div class="sidebar-toggler not-active">
             <span></span>
@@ -18,7 +18,7 @@
                     <span class="link-title">Dashboard</span>
                 </a>
             </li>
-            @role(\App\Models\User::ROLE_ADMIN)
+            @role(\App\Constants\AppConstant::ROLE_ADMIN)
                 <li class="nav-item nav-category">Users Section</li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" data-bs-toggle="collapse"
@@ -111,5 +111,14 @@
                     </ul>
                 </div>
             </li>
+            @role(\App\Constants\AppConstant::ROLE_ADMIN)
+                <li class="nav-item nav-category">Application</li>
+                <li class="nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
+                    <a href="{{ route('home') }}" class="nav-link">
+                        <i class="link-icon" data-feather="settings"></i>
+                        <span class="link-title">Settings</span>
+                    </a>
+                </li>
+            @endrole
     </div>
 </nav>

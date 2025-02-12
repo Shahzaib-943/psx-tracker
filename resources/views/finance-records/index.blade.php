@@ -40,7 +40,7 @@
     <script>
         $(document).ready(function() {
             let userRole = @json(auth()->user()->getRoleNames()->first());
-            const ADMIN = @json(\App\Models\User::ROLE_ADMIN);
+            const ADMIN = @json(\App\Constants\AppConstant::ROLE_ADMIN);
             $('#finance-records-dataTable').DataTable({
                 processing: true,
                 serverSide: true,

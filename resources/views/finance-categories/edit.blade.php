@@ -68,7 +68,7 @@
                     </div>
 
                     <!-- User Selection (for admin) -->
-                    @role(\App\Models\User::ROLE_ADMIN)
+                    @role(\App\Constants\AppConstant::ROLE_ADMIN)
                         <div class="mb-3">
                             <input type="checkbox" name="is_common" id="is_common"
                                 {{ $financeCategory->is_common ? 'checked' : '' }}>
@@ -109,7 +109,7 @@
         <script>
             window.appConfig = {
                 userRole: @json(auth()->user()->getRoleNames()->first()),
-                ADMIN: @json(\App\Models\User::ROLE_ADMIN),
+                ADMIN: @json(\App\Constants\AppConstant::ROLE_ADMIN),
             };
         </script>
         <script>

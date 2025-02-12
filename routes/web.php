@@ -15,6 +15,18 @@ use App\Http\Controllers\FinanceCategoryController;
 Auth::routes();
 
 Route::get('/', function () {
+ // return phpinfo();
+// dd($symbol);
+        // $response = Http::get('https://dps.psx.com.pk/timeseries/int/' . $symbol);
+        $response = Http::get('https://dps.psx.com.pk/symbols');
+        $data = $response->json();
+        // $data = $response;
+        // $response = Http::get('https://jsonplaceholder.typicode.com/todos/1');
+dd("Price : ", $data);
+        // dd("Price : ", $data);
+        $types = array_column($data, 'sectorName'); // Collect all sector names
+$types = array_unique($types);             // Remove duplicates
+dd("type ", $types);
     return view('auth.login');
 });
 
