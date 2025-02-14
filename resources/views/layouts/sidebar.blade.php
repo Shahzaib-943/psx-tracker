@@ -111,6 +111,28 @@
                     </ul>
                 </div>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('portfolios.*') ? 'active' : '' }}"
+                    data-bs-toggle="collapse" href="#portfolios" role="button"
+                    aria-expanded="{{ request()->routeIs('portfolios.*') ? 'true' : 'false' }}"
+                    aria-controls="portfolios">
+                    <i class="link-icon mdi mdi-book-plus"></i>
+                    <span class="link-title">Portfolios</span>
+                    <i class="link-arrow" data-feather="chevron-down"></i>
+                </a>
+                <div class="collapse {{ request()->routeIs('portfolios.*') ? 'show' : '' }}" id="portfolios">
+                    <ul class="nav sub-menu">
+                        <li class="nav-item">
+                            <a href="{{ route('portfolios.create') }}"
+                                class="nav-link {{ request()->routeIs('portfolios.create') ? 'active' : '' }}">Create</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('portfolios.index') }}"
+                                class="nav-link {{ request()->routeIs('portfolios.index') ? 'active' : '' }}">List</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
             @role(\App\Constants\AppConstant::ROLE_ADMIN)
                 <li class="nav-item nav-category">Application</li>
                 <li class="nav-item {{ request()->routeIs('home') ? 'active' : '' }}">

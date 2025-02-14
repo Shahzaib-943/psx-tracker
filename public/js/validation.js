@@ -530,13 +530,13 @@ $(document).ready(function () {
             },
             user_id: {
                 required: function () {
-                    return !$('#is_common').is(':checked');
+                    return !$("#is_common").is(":checked");
                 },
                 digits: true,
             },
             is_common: {
                 required: function () {
-                    return !$('#user_id').val();
+                    return !$("#user_id").val();
                 },
             },
         },
@@ -589,13 +589,13 @@ $(document).ready(function () {
             },
             user_id: {
                 required: function () {
-                    return !$('#is_common').is(':checked');
+                    return !$("#is_common").is(":checked");
                 },
                 digits: true,
             },
             is_common: {
                 required: function () {
-                    return !$('#user_id').val();
+                    return !$("#user_id").val();
                 },
             },
         },
@@ -633,42 +633,17 @@ $(document).ready(function () {
             $(element).addClass("is-valid").removeClass("is-invalid");
         },
     });
-    $("#createFinanceRecordForm").validate({
+    $("#createPortfolioForm").validate({
         rules: {
-            date: {
+            name: {
                 required: true,
-                dateISO: true,
-            },
-            finance_type_id: {
-                required: true,
-                digits: true,
-            },
-            finance_category_id: {
-                required: true,
-                digits: true,
-            },
-            amount: {
-                required: true,
-                number: true, // Allows decimals
-                min: 0.1, // Ensures a minimum amount like 0.10
+                minlength: 3,
             },
         },
         messages: {
             name: {
                 required: "Please enter a name",
                 minlength: "Name must consist of at least 3 characters",
-            },
-            finance_type_id: {
-                required: "Please select a finance type",
-                digits: "Must be a valid ID",
-            },
-            finance_category_id: {
-                required: "Please select a finance category",
-                digits: "Must be a valid ID",
-            },
-            amount: {
-                required: "Please enter amount",
-                digits: "Must be a valid amount",
             },
         },
 

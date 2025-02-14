@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\Stock;
+use App\Models\Sector;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
@@ -11,22 +14,29 @@ use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\SocialiteController;
 use App\Http\Controllers\FinanceRecordController;
 use App\Http\Controllers\FinanceCategoryController;
+use App\Http\Controllers\PortfolioController;
 
 Auth::routes();
 
 Route::get('/', function () {
- // return phpinfo();
-// dd($symbol);
-        // $response = Http::get('https://dps.psx.com.pk/timeseries/int/' . $symbol);
-        $response = Http::get('https://dps.psx.com.pk/symbols');
+    $response = Http::get('https://dps.psx.com.pk/symbols');
         $data = $response->json();
-        // $data = $response;
-        // $response = Http::get('https://jsonplaceholder.typicode.com/todos/1');
-dd("Price : ", $data);
-        // dd("Price : ", $data);
-        $types = array_column($data, 'sectorName'); // Collect all sector names
-$types = array_unique($types);             // Remove duplicates
-dd("type ", $types);
+        $types = array_filter(array_unique(array_column($data, 'sectorName')));
+        $sectorIds = [];
+        foreach ($types as $type) {
+            $sector = Sector::firstOrCreate(['name' => $type]);
+            $sectorIds[$type] = $sector->id;
+        }
+// dd("sectorIds",$sectorIds);
+        foreach ($data as $stock) {
+            if (!empty($stock['symbol']) && !empty($stock['sectorName']) && isset($sectorIds[$stock['sectorName']])) {
+                Stock::firstOrCreate([
+                    'sector_id' => $sectorIds[$stock['sectorName']],
+                    'symbol' => $stock['symbol'],
+                    'name' => $stock['name'],
+                ]);
+            }
+        }
     return view('auth.login');
 });
 
@@ -37,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('roles', RoleController::class);
     Route::resource('profile', ProfileController::class);
     Route::get('finance-categories/by-type', [FinanceCategoryController::class, 'getCategoriesByType'])->name('finance-categories.by-type');
+    Route::resource('portfolios', PortfolioController::class);
     Route::resource('finance-categories', FinanceCategoryController::class);
     Route::resource('finance-records', FinanceRecordController::class);
 
