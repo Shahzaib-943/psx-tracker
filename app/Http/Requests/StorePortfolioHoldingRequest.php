@@ -26,6 +26,7 @@ class StorePortfolioHoldingRequest extends CustomFormRequest
             'price_per_share' => ['required', 'numeric', 'min:0.01'],
             'total_investment' => ['nullable', 'numeric', 'min:0.01'],
             'make_deductions' => ['nullable', 'boolean'],
+            'transaction_date' => ['date'],
         ];
     }
 }

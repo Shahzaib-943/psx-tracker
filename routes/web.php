@@ -17,10 +17,10 @@ use App\Http\Controllers\FinanceRecordController;
 use App\Http\Controllers\FinanceCategoryController;
 use App\Http\Controllers\PortfolioHoldingController;
 
-Auth::routes();
+Auth::routes(['register' => false]);
 
 Route::get('/', function () {
-//     $response = Http::get('https://dps.psx.com.pk/symbols');
+    //     $response = Http::get('https://dps.psx.com.pk/symbols');
 //         $data = $response->json();
 //         $types = array_filter(array_unique(array_column($data, 'sectorName')));
 //         $sectorIds = [];
@@ -55,8 +55,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('finance-records', FinanceRecordController::class);
 
 });
-
-Route::controller(SocialiteController::class)->group(function () {
-    Route::get('auth/{driver}', 'redirectToSocialiteDriver')->name('auth.login-page');
-    Route::get('auth/{driver}/callback', 'handleSocialiteDriverCallback');
-});
+if (config('auth.socialite_enabled')) {
+    Route::controller(SocialiteController::class)->group(function () {
+        Route::get('auth/{driver}', 'redirectToSocialiteDriver')->name('auth.login-page');
+        Route::get('auth/{driver}/callback', 'handleSocialiteDriverCallback');
+    });
+}

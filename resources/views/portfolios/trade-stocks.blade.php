@@ -96,7 +96,7 @@
                                         *</span></label>
                                 <input id="transaction_date"
                                     class="form-control @error('transaction_date') is-invalid @enderror"
-                                    name="transaction_date" type="transaction_date"
+                                    name="transaction_date" type="date"
                                     value="{{ old('transaction_date', now()->format('Y-m-d')) }}">
                                 @error('transaction_date')
                                     <span class="invalid-feedback" role="alert">

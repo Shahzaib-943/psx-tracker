@@ -11,12 +11,12 @@
                             <div class="row">
                                 <div class="col-md-12 ps-md-0">
                                     <div class="auth-form-wrapper px-4 py-5">
-                                        <a href="{{ route('home') }}"
-                                            {{-- class="noble-ui-logo d-block mb-2">Fiscal<span>Ease</span></a> --}}
+                                        <a href="{{ route('home') }}" {{-- class="noble-ui-logo d-block mb-2">Fiscal<span>Ease</span></a> --}}
                                             class="noble-ui-logo d-block mb-2">{{ \App\Constants\AppConstant::APP_FIRST_NAME }}<span>{{ \App\Constants\AppConstant::APP_SECOND_NAME }}</span></a>
                                         <h5 class="text-muted fw-normal mb-4">Welcome to {{ config('app.name') }}! 👋</h5>
                                         {{-- <h5 class="text-muted fw-normal mb-4">Sign in to your account and take control of your finances today!</h5> --}}
-                                        <h5 class="text-muted fw-normal mb-4">{{ \App\Constants\AppConstant::LANDING_PAGE_DESC }}</h5>
+                                        <h5 class="text-muted fw-normal mb-4">
+                                            {{ \App\Constants\AppConstant::LANDING_PAGE_DESC }}</h5>
                                         <form id="loginForm" class="forms-sample" method="POST"
                                             action="{{ route('login') }}">
                                             @csrf
@@ -58,11 +58,14 @@
                                             <div class="d-flex">
                                                 <button type="submit"
                                                     class="btn btn-primary me-2 mb-2 mb-md-0 text-white">Login</button>
-                                                <a href="{{ route('auth.login-page', ['driver' => 'google']) }}" type="button"
-                                                    class="btn btn-outline-primary btn-icon-text mx-2 mb-2 mb-md-0">
-                                                    <i class="btn-icon-prepend" data-feather="chrome"></i>
-                                                    Login with Google
-                                                </a>
+                                                @if (config('auth.socialite_enabled'))
+                                                    <a href="{{ route('auth.login-page', ['driver' => 'google']) }}"
+                                                        type="button"
+                                                        class="btn btn-outline-primary btn-icon-text mx-2 mb-2 mb-md-0">
+                                                        <i class="btn-icon-prepend" data-feather="chrome"></i>
+                                                        Login with Google
+                                                    </a>
+                                                @endif
 
                                                 @if (Route::has('password.request'))
                                                     <div class="mt-3">
