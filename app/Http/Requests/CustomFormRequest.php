@@ -11,18 +11,14 @@ class CustomFormRequest extends FormRequest
 
 
     protected function failedValidation(Validator $validator)
-{
-    // Get all validation errors
-    $errors = $validator->errors()->all();
+    {
+        $errors = $validator->errors()->all();
+        foreach ($errors as $error) {
+            flash()->error($error);
+        }
 
-    // Flash each error message separately
-    foreach ($errors as $error) {
-        flash()->error($error);
+        throw new HttpResponseException(
+            redirect()->back()->withInput()->withErrors($validator)
+        );
     }
-
-    // Redirect back with input and validation errors
-    throw new HttpResponseException(
-        redirect()->back()->withInput()->withErrors($validator)
-    );
-}
 }

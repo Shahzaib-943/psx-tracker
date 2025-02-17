@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Stock extends Model
 {
-    protected $fillable = ['sector_id', 'symbol', 'name'];
+    protected $fillable = ['sector_id', 'symbol', 'name', 'slug'];
 }

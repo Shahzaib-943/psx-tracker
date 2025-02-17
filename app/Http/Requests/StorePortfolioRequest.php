@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePortfolioRequest extends CustomFormRequest
@@ -20,16 +21,21 @@ class StorePortfolioRequest extends CustomFormRequest
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
-    {
-        return [
-            "name" => "required|max:255|min:3",
-            "description" => "nullable|max:255|min:3",
-            "user_id" => [
-                "nullable",
-                "exists:users,id",
-            ],
-        ];
-    }
+{
+    return [
+        "name" => "required|max:255|min:3",
+        "description" => "nullable|max:255|min:3",
+        "user_id" => [
+            "nullable",
+            "exists:users,id",
+            function ($attribute, $value, $fail) {
+                if ($value && !auth()->user()->isAdmin()) {
+                    $fail("Only admin can set the {$attribute}.");
+                }
+            }
+        ]
+    ];
+}
 
     public function messages()
     {

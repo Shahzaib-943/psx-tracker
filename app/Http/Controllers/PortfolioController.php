@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Stock;
 use App\Models\Portfolio;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -19,13 +20,12 @@ class PortfolioController extends Controller
     {
         $user = auth()->user();
 
-        $categories = Portfolio::with('user');
+        $portfolios = Portfolio::query();
         if ($user->isUser()) {
-            $categories->where('is_common', true)
-                ->orWhere('user_id', $user->id);
+            $portfolios = Portfolio::with('user')->where('user_id', $user->id);
         }
         if ($request->ajax()) {
-            $table = DataTables::of($categories)
+            $table = DataTables::of($portfolios)
                 ->addIndexColumn()
                 ->addColumn('user', function ($row) {
                     if ($row->user) {
@@ -34,11 +34,14 @@ class PortfolioController extends Controller
                     }
                 })
                 ->addColumn('name', function ($row) {
-                    return "<span style='color: {$row->color};'>{$row->name}</span>";
+                    return $row->name;
+                })
+                ->addColumn('description', function ($row) {
+                    return Str::limit($row->description, 20, ' ...');
                 })
                 ->addColumn('actionButton', function ($row) {
-                    $editUrl = route('finance-categories.edit', $row->slug);
-                    $deleteUrl = route('finance-categories.destroy', $row->id);
+                    $editUrl = route('portfolios.edit', $row->slug);
+                    $deleteUrl = route('portfolios.destroy', $row->slug);
                     $actionButtons = '<button type="button" class="btn btn-primary btn-icon" onclick="window.location.href=\'' . $editUrl . '\'">
                     <i data-feather="edit"></i>
                     </button>
@@ -66,7 +69,7 @@ class PortfolioController extends Controller
     public function create()
     {
         $users = User::with('role')->get(['id', 'name']);
-        return view('portfolios.create',compact('users'));
+        return view('portfolios.create', compact('users'));
     }
 
     /**
@@ -123,5 +126,18 @@ class PortfolioController extends Controller
         } else {
             return response()->json(['error' => 'Failed to delete portfolio.'], 500);
         }
+    }
+
+    public function tradeStocks(Portfolio $portfolio)
+    {
+        $user = auth()->user();
+
+        if ($user->isAdmin()) {
+            $portfolios = Portfolio::get(['name', 'slug']);
+        } elseif ($user->isUSer()) {
+            $portfolios = Portfolio::where('user_id', $user->id)->get(['name', 'slug']);
+        }
+        $stocks = Stock::get(['name', 'symbol', 'slug']);
+        return view('portfolios.trade-stocks', compact('portfolios', 'stocks'));
     }
 }

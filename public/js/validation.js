@@ -663,4 +663,63 @@ $(document).ready(function () {
             $(element).addClass("is-valid").removeClass("is-invalid");
         },
     });
+
+    $("#createStockTradeForm").validate({
+        rules: {
+            portfolio: {
+                required: true,
+            },
+            stock: {
+                required: true,
+            },
+            price_per_share: {
+                required: true,
+                number: true,
+            },
+            quantity: {
+                required: true,
+                number: true,
+            },
+            transaction_date: {
+                required: true,
+                date: true,
+            },
+        },
+        messages: {
+            portfolio: {
+                required: "Please select a portfolio",
+            },
+            stock: {
+                required: "Please select a stock",
+            },
+            price_per_share: {
+                required: "Please enter stock price",
+                number: "Must be a valid number",
+            },
+            quantity: {
+                required: "Please enter stock quantity",
+                number: "Must be a valid number",
+            },
+            transaction_date: {
+                required: "Please enter buy date",
+                date: "Must be a valid date",
+            },
+        },
+
+        errorPlacement: function (error, element) {
+            error.addClass("invalid-feedback");
+
+            if (element.parent(".input-group").length) {
+                error.insertAfter(element.parent());
+            } else {
+                error.insertAfter(element);
+            }
+        },
+        highlight: function (element, errorClass) {
+            $(element).addClass("is-invalid").removeClass("is-valid");
+        },
+        unhighlight: function (element, errorClass) {
+            $(element).addClass("is-valid").removeClass("is-invalid");
+        },
+    });
 });

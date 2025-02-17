@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('sector_id')->constrained()->onDelete('cascade');
             $table->string('symbol')->unique();
+            $table->string('slug')->unique();
             $table->string('name');
             $table->timestamps();
         });

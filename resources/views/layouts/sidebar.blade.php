@@ -130,6 +130,10 @@
                             <a href="{{ route('portfolios.index') }}"
                                 class="nav-link {{ request()->routeIs('portfolios.index') ? 'active' : '' }}">List</a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('portfolios.trade') }}"
+                                class="nav-link {{ request()->routeIs('portfolios.trade') ? 'active' : '' }}">Trade</a>
+                        </li>
                     </ul>
                 </div>
             </li>

@@ -15,6 +15,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Name</th>
+                                    <th>Description</th>
                                     @role(\App\Constants\AppConstant::ROLE_ADMIN)
                                         <th id="user-column-header">User</th>
                                     @endrole
@@ -45,6 +46,10 @@
                     name: 'name'
                 },
                 {
+                    data: 'description',
+                    name: 'description'
+                },
+                {
                     data: 'actionButton',
                     name: 'actionButton',
                     orderable: false,
@@ -52,7 +57,7 @@
                 }
             ];
             if (userRole === ADMIN) {
-                columns.splice(2,0,{
+                columns.splice(3,0,{
                     data: 'user',
                     name: 'user',
                     render: function(data, type, row) {

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('page-title', 'Create Portfolio')
-@section('main-page', 'Portfolio')
+@section('main-page', 'Portfolios')
 @section('sub-page', 'Create')
 @section('content')
     <style>

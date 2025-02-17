@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Stock;
 use App\Models\Sector;
+use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -20,7 +21,7 @@ class SectorAndStockSeeder extends Seeder
         $types = array_filter(array_unique(array_column($data, 'sectorName')));
         $sectorIds = [];
         foreach ($types as $type) {
-            $sector = Sector::firstOrCreate(['name' => $type]);
+            $sector = Sector::firstOrCreate(['name' => $type, 'slug' => Str::slug($type)]);
             $sectorIds[$type] = $sector->id;
         }
 
@@ -29,6 +30,7 @@ class SectorAndStockSeeder extends Seeder
                 Stock::firstOrCreate([
                     'sector_id' => $sectorIds[$stock['sectorName']],
                     'symbol' => $stock['symbol'],
+                    'slug' => Str::slug($stock['symbol']),
                     'name' => $stock['name'],
                 ]);
             }
