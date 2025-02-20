@@ -87,9 +87,9 @@ class PortfolioHoldingController extends Controller
                 ]
             );
             DB::commit();
-            // return redirect()->route('portfolio.show', $validatedData['portfolio_id'])
-            //     ->with('success', 'Shares purchased successfully');
-            // });
+            return redirect()->route('portfolios.show', $validatedData['portfolio'])
+                ->with('success', 'Shares purchased successfully');
+            ;
         } catch (\Exception $e) {
             Log::error("Transaction failed: " . $e->getMessage());
             return back()->withInput()->withErrors(['error' => 'Transaction failed: ' . $e->getMessage()]);
@@ -101,9 +101,9 @@ class PortfolioHoldingController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Portfolio $portfolio)
     {
-        //
+        dd("Portfolio : ", $portfolio);
     }
 
     /**

@@ -111,7 +111,7 @@
                                     <input id="make_deductions"
                                         class="form-check-input @error('make_deductions') is-invalid @enderror"
                                         name="make_deductions" type="checkbox" value="1"
-                                        {{ old('make_deductions') ? 'checked' : '' }}>
+                                        {{ old('make_deductions') ? 'checked' : '' }} checked>
                                     <label for="make_deductions" class="form-check-label">Make Deductions<span
                                             class="text-danger"> *</span></label>
                                 </div>

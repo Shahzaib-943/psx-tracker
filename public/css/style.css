@@ -2,3 +2,14 @@
     width: 100%;
     table-layout: auto; /* Allow columns to adjust to content */
 }
+
+.primary-purple {
+    color: #6571FF;
+}
+
+.primary-green {
+    color: #16A34A;
+}
+.primary-red {
+    color: #DC2626;
+}

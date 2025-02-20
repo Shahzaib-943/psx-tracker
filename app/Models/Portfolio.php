@@ -13,6 +13,11 @@ class Portfolio extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function holdings()
+    {
+        return $this->hasMany(PortfolioHolding::class);
+    }
+
     public function getRouteKeyName()
     {
         return 'slug';
