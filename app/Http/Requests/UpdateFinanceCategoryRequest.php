@@ -28,7 +28,7 @@ class UpdateFinanceCategoryRequest extends CustomFormRequest
             "color" => "required|max:7",
         ];
 
-        if (auth()->user()->hasRole(User::ROLE_ADMIN)) {
+        if (auth()->user()->hasRole(AppConstant::ROLE_ADMIN)) {
             $rules["user_id"] = "required|integer|exists:users,id";
         }
         return $rules;

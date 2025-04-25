@@ -34,28 +34,11 @@
     <!-- End layout styles -->
 
     <link rel="shortcut icon" href="{{ asset('nobleui/assets/images/favicon.png') }}" />
-
     @livewireStyles
+
 </head>
 <body>
-
-    @yield('content')
-
-
-    <!-- core:js -->
-    {{-- <script src="{{ asset('nobleui/assets/vendors/core/core.js') }}"></script>
-    <!-- endinject -->
-
-    @stack('scripts')
-
-    <!-- Plugin js for this page -->
-    <!-- End plugin js for this page -->
-
-    <!-- inject:js -->
-    <script src="{{ asset('nobleui/assets/vendors/feather-icons/feather.min.js') }}"></script>
-    <script src="{{ asset('nobleui/assets/js/template.js') }}"></script> --}}
-    <!-- endinject -->
+    {{ $slot }}
     @livewireScripts
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>

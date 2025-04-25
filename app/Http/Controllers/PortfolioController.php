@@ -7,14 +7,15 @@ use App\Models\Stock;
 use App\Models\Portfolio;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\SystemSettings;
 use App\Models\StockTransaction;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\StorePortfolioRequest;
-use App\Models\SystemSettings;
 
 class PortfolioController extends Controller
 {
@@ -105,87 +106,139 @@ class PortfolioController extends Controller
     /**
      * Display the specified resource.
      */
+    //     public function show(Portfolio $portfolio)
+//     {
+//         $holdingStocks = query();
+//         // $user = auth()->user();
+//         // $portfolio->load('holdings:id,portfolio_id,stock_id,quantity,average_cost,total_investment','holdings.stock:id,symbol');
+//         // $portfolioHoldings = $portfolio->holdings->toArray();
+//         // dd("portfolioHoldings : ", $portfolioHoldings);
+//         // $portfolios = Portfolio::query();
+//         // if ($user->isUser()) {
+//         //     $portfolios = Portfolio::with('user')->where('user_id', $user->id);
+//         // }
+//         // if ($request->ajax()) {
+//         //     $table = DataTables::of($portfolios)
+//         //         ->addIndexColumn()
+//         //         ->addColumn('user', function ($row) {
+//         //             if ($row->user) {
+//         //                 $roleName = $row->user->roles->isNotEmpty() ? $row->user->roles->first()->name : 'No Role';
+//         //                 return $row->user->name . ' (' . ucfirst($roleName) . ')';
+//         //             }
+//         //         })
+//         //         ->addColumn('name', function ($row) {
+//         //             $portfolioUrl = route('portfolios.show', $row->slug);
+//         //             $actionButton = '<a  type="button" onclick="window.location.href=\'' . $portfolioUrl . '\'">
+//         //             ' . $row->name . '
+//         //             </a>';
+//         //             return $actionButton;
+
+    //         //         })
+//         //         ->addColumn('description', function ($row) {
+//         //             return Str::limit($row->description, 20, ' ...');
+//         //         })
+//         //         ->addColumn('actionButton', function ($row) {
+//         //             $editUrl = route('portfolios.edit', $row->slug);
+//         //             $deleteUrl = route('portfolios.destroy', $row->slug);
+//         //             $actionButtons = '<button type="button" class="btn btn-primary btn-icon" onclick="window.location.href=\'' . $editUrl . '\'">
+//         //             <i data-feather="edit"></i>
+//         //             </button>
+//         //             <button type="button" class="btn btn-danger btn-icon delete-button" data-url="' . $deleteUrl . '" data-type="portfolio">
+//         //                 <i data-feather="trash-2"></i>
+//         //             </button>';
+//         //             return $actionButtons;
+//         //         })
+//         //         ->rawColumns(['actionButton', 'name']);
+//         //     if (!$user->isAdmin()) {
+//         //         $table->removeColumn('user');
+//         //         $table->removeColumn('is_common');
+//         //     }
+//         //     return $table->make(true);
+//         // }
+// // Fetch holdings with related stocks
+//         $holdings = $portfolio->holdings()->with('stock')->get();
+// // dd("holdings", $holdings);
+//         // Calculate investment amount
+//         $investmentAmount = $holdings->sum('total_investment');
+// // dd("a");
+// // dd("aaa", $investmentAmount);
+//         $stockPrices = $this->getStockPrices($holdings);
+//         // Unrealized Profit (Market Value - Investment)
+//         $marketValue = $holdings->sum(fn($holding) => ($stockPrices[$holding->stock->symbol] ?? 0) * $holding->quantity);
+// // dd("market value : ", $marketValue);
+// // Unrealized Profit
+//         $unrealizedProfit = round($marketValue - $investmentAmount,2);
+
+    //         // dd("investmentAmount", $prices);
+
+    //         // Realized Profit from transactions table (sum of sell transactions)
+//         $realizedProfit = StockTransaction::where('portfolio_id', $portfolio->id)
+//             ->where('transaction_type', 'sell')
+//             ->sum('net_amount');
+
+    //         // Today's Return (change in stock price * quantity)
+//         $todaysReturn = $holdings->sum(fn($holding) => ($holding->stock->current_price - $holding->stock->previous_close) * $holding->quantity);
+
+    //         // Total Return %
+//         $totalReturn = round($investmentAmount > 0 ? ($unrealizedProfit / $investmentAmount) * 100 : 0,2);
+
+    //         // Fetch deductions
+//         $deductions = StockTransaction::where('portfolio_id', $portfolio->id)->sum('total_deductions');
+
+    //         // Tax Payable (Example: 15% of Realized Profit)
+//         $taxPayable = max($realizedProfit * 0.15, 0);
+
+    // Log::info("AAA", [formatPercentageClass($totalReturn)]);
+//         return view('portfolios.show', compact(
+//             'portfolio',
+//             'holdings',
+//             'investmentAmount',
+//             'unrealizedProfit',
+//             'realizedProfit',
+//             'todaysReturn',
+//             'totalReturn',
+//             'deductions',
+//             'marketValue',
+//             'taxPayable'
+//         ));
+//     }
+
     public function show(Portfolio $portfolio)
     {
-        // $user = auth()->user();
-        // $portfolio->load('holdings:id,portfolio_id,stock_id,quantity,average_cost,total_investment','holdings.stock:id,symbol');
-        // $portfolioHoldings = $portfolio->holdings->toArray();
-        // dd("portfolioHoldings : ", $portfolioHoldings);
-        // $portfolios = Portfolio::query();
-        // if ($user->isUser()) {
-        //     $portfolios = Portfolio::with('user')->where('user_id', $user->id);
-        // }
-        // if ($request->ajax()) {
-        //     $table = DataTables::of($portfolios)
-        //         ->addIndexColumn()
-        //         ->addColumn('user', function ($row) {
-        //             if ($row->user) {
-        //                 $roleName = $row->user->roles->isNotEmpty() ? $row->user->roles->first()->name : 'No Role';
-        //                 return $row->user->name . ' (' . ucfirst($roleName) . ')';
-        //             }
-        //         })
-        //         ->addColumn('name', function ($row) {
-        //             $portfolioUrl = route('portfolios.show', $row->slug);
-        //             $actionButton = '<a  type="button" onclick="window.location.href=\'' . $portfolioUrl . '\'">
-        //             ' . $row->name . '
-        //             </a>';
-        //             return $actionButton;
-
-        //         })
-        //         ->addColumn('description', function ($row) {
-        //             return Str::limit($row->description, 20, ' ...');
-        //         })
-        //         ->addColumn('actionButton', function ($row) {
-        //             $editUrl = route('portfolios.edit', $row->slug);
-        //             $deleteUrl = route('portfolios.destroy', $row->slug);
-        //             $actionButtons = '<button type="button" class="btn btn-primary btn-icon" onclick="window.location.href=\'' . $editUrl . '\'">
-        //             <i data-feather="edit"></i>
-        //             </button>
-        //             <button type="button" class="btn btn-danger btn-icon delete-button" data-url="' . $deleteUrl . '" data-type="portfolio">
-        //                 <i data-feather="trash-2"></i>
-        //             </button>';
-        //             return $actionButtons;
-        //         })
-        //         ->rawColumns(['actionButton', 'name']);
-        //     if (!$user->isAdmin()) {
-        //         $table->removeColumn('user');
-        //         $table->removeColumn('is_common');
-        //     }
-        //     return $table->make(true);
-        // }
-// Fetch holdings with related stocks
-        $holdings = $portfolio->holdings()->with('stock')->get();
-// dd("holdings", $holdings);
-        // Calculate investment amount
+        $holdingsQuery = $portfolio->holdings()->with('stock');
+        $holdings = $holdingsQuery->get();
+        $stockPrices = $this->getStockPrices($portfolio);
+        // dd($stockPrices);
         $investmentAmount = $holdings->sum('total_investment');
-// dd("a");
-// dd("aaa", $investmentAmount);
-        $stockPrices = $this->getStockPrices($holdings);
-        // Unrealized Profit (Market Value - Investment)
+        if (request()->ajax()) {
+            return DataTables::of($holdingsQuery)
+                ->addIndexColumn()
+                ->addColumn('symbol', fn($holding) => $holding->stock->symbol)
+                ->addColumn('quantity', fn($holding) => $holding->quantity)
+                ->addColumn('avg_price', fn($holding) => formatNumber($holding->average_cost))
+                ->addColumn('current_price', fn($holding) => formatNumber($stockPrices[$holding->stock->symbol]))
+                // ->addColumn('today_pnl', fn($holding) => formatNumber(($holding->stock->current_price - $holding->stock->previous_close) * $holding->quantity))
+                ->addColumn('today_pnl', fn($holding) => formatNumber((0)))
+                ->addColumn('total_pnl', fn($holding) => formatNumber(($holding->stock->current_price * $holding->quantity) - $holding->total_investment))
+                ->addColumn('market_value', fn($holding) => formatNumber($holding->stock->current_price * $holding->quantity))
+                ->addColumn('portfolio_percentage', function ($holding) use ($portfolio) {
+                    $totalMarketValue = $portfolio->holdings->sum(fn($h) => $h->stock->current_price * $h->quantity);
+                    return $totalMarketValue > 0 ? round(($holding->stock->current_price * $holding->quantity) / $totalMarketValue * 100, 2) . '%' : '0%';
+                })
+                ->rawColumns(['symbol', 'quantity', 'avg_price', 'curr_price', 'today_pnl', 'total_pnl', 'market_value', 'portfolio_percentage'])
+                ->make(true);
+        }
+
+
         $marketValue = $holdings->sum(fn($holding) => ($stockPrices[$holding->stock->symbol] ?? 0) * $holding->quantity);
-// dd("market value : ", $marketValue);
-// Unrealized Profit
-        $unrealizedProfit = round($marketValue - $investmentAmount,2);
-
-        // dd("investmentAmount", $prices);
-
-        // Realized Profit from transactions table (sum of sell transactions)
+        $unrealizedProfit = round($marketValue - $investmentAmount, 2);
         $realizedProfit = StockTransaction::where('portfolio_id', $portfolio->id)
             ->where('transaction_type', 'sell')
             ->sum('net_amount');
-
-        // Today's Return (change in stock price * quantity)
         $todaysReturn = $holdings->sum(fn($holding) => ($holding->stock->current_price - $holding->stock->previous_close) * $holding->quantity);
-
-        // Total Return %
-        $totalReturn = round($investmentAmount > 0 ? ($unrealizedProfit / $investmentAmount) * 100 : 0,2);
-
-        // Fetch deductions
+        $totalReturn = round($investmentAmount > 0 ? ($unrealizedProfit / $investmentAmount) * 100 : 0, 2);
         $deductions = StockTransaction::where('portfolio_id', $portfolio->id)->sum('total_deductions');
-
-        // Tax Payable (Example: 15% of Realized Profit)
         $taxPayable = max($realizedProfit * 0.15, 0);
-
 
         return view('portfolios.show', compact(
             'portfolio',
@@ -200,6 +253,7 @@ class PortfolioController extends Controller
             'taxPayable'
         ));
     }
+
     function formatNumber($number)
     {
         if ($number >= 1000000000) {
@@ -270,28 +324,39 @@ class PortfolioController extends Controller
         return now()->isWeekday() && $currentTime >= $marketOpenTime && $currentTime <= $marketCloseTime;
     }
 
-    private function getStockPrices($holdings)
+    private function getStockPrices($portfolio)
     {
         $isMarketOpen = $this->isMarketOpen();
-        $lock = Cache::lock('stock_prices_lock', 60);
+        // $isMarketOpen = true;
+        if (!$isMarketOpen) {
+            return Cache::get('portfolio_' . $portfolio->id, []);
+        }
+        $lock = Cache::lock('portfolio_' . $portfolio->id, 60);
         if (!$lock->get()) {
-            return Cache::get('stock_prices', []);
+            return Cache::get('portfolio_' . $portfolio->id, []);
         }
-        $prices = [];
-        foreach ($holdings as $holding) {
-            $symbol = $holding->stock->symbol;
-            $response = Http::get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
+        try {
+            $holdings = $portfolio->holdings()->with('stock')->get();
+            $prices = [];
+            foreach ($holdings as $holding) {
+                $symbol = $holding->stock->symbol;
+                $response = Http::get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
 
-            if ($response->successful()) {
-                $data = $response->json();
-// dd("data : ", gettype($data), $data);
-                $prices[$symbol] = $data['data'][0][1] ?? 0;
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $prices[$symbol] = $data['data'][0][1] ?? 0;
+                } else {
+                    Log::error("Failed to fetch price for {$symbol}. Response: " . $response->body());
+                    $prices[$symbol] = Cache::get("stock_price_{$symbol}", 0);
+                }
             }
+            Cache::put('portfolio_' . $portfolio->id, $prices);
+        } catch (\Exception $e) {
+            Log::error("Error fetching stock prices: " . $e->getMessage());
+        } finally {
+            $lock->release();
         }
-
-        Cache::put('stock_prices', $prices);
-        $lock->release();
-        return $prices;
+        return Cache::get('portfolio_' . $portfolio->id, []);
     }
 
 }

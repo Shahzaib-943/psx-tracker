@@ -2,6 +2,8 @@
 
 use App\Models\Stock;
 use App\Models\Sector;
+use Illuminate\Support\Facades\Log;
+use App\Livewire\DividendCalculator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +40,7 @@ Route::get('/', function () {
 //                 ]);
 //             }
 //         }
+Log::info("hereeeeeeeeeee00");
     return view('auth.login');
 });
 
@@ -61,3 +64,5 @@ if (config('auth.socialite_enabled')) {
         Route::get('auth/{driver}/callback', 'handleSocialiteDriverCallback');
     });
 }
+
+Route::get('/dividend-calculator', DividendCalculator::class)->name('dividend.calculator');

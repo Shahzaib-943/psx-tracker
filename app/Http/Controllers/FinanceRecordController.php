@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\FinanceType;
 use Illuminate\Http\Request;
 use App\Models\FinanceRecord;
+use App\Constants\AppConstant;
 use App\Models\FinanceCategory;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
@@ -21,7 +22,7 @@ class FinanceRecordController extends Controller
     {
         $user = auth()->user();
         if ($request->ajax()) {
-            if ($user->hasRole(User::ROLE_ADMIN)) {
+            if ($user->hasRole(AppConstant::ROLE_ADMIN)) {
                 $records = FinanceRecord::with('user:id,name', 'user.roles:id,name', 'financeCategory:id,name,finance_type_id', 'financeCategory.financeType:id,name')->get(['id', 'user_id', 'finance_category_id', 'description', 'date', 'amount']);
             } else {
                 $records = FinanceRecord::with('financeCategory:id,name,finance_type_id', 'financeCategory.financeType:id,name')

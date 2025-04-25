@@ -21,7 +21,7 @@ class AdminSeeder extends Seeder
         ]);
 
         if($user) {
-            $user->assignRole(User::ROLE_ADMIN);
+            $user->assignRole(AppConstant::ROLE_ADMIN);
         }
     }
 }

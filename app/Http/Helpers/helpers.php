@@ -18,3 +18,9 @@ if (!function_exists('getProfitLossClass')) {
         return $value >= 0 ? 'mdi mdi-trending-up primary-green' : 'mdi mdi-trending-down primary-red';
     }
 }
+if (!function_exists('formatPercentageClass')) {
+    function formatPercentageClass($value)
+    {
+        return $value >= 0 ? 'badge bg-success' : 'badge bg-danger';
+    }
+}
