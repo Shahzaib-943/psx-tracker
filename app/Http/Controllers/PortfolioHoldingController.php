@@ -36,23 +36,29 @@ class PortfolioHoldingController extends Controller
     public function store(StorePortfolioHoldingRequest $request)
     {
         $validatedData = $request->validated();
-
-        $portfolio = Portfolio::where('slug', $validatedData['portfolio'])->firstOrFail();
+        
+        $portfolio = Portfolio::where('public_id', $validatedData['portfolio'])->firstOrFail();
         $stock = Stock::where('slug', $validatedData['stock'])->firstOrFail();
-
+        
         $validatedData['portfolio_id'] = $portfolio->id;
         $validatedData['stock_id'] = $stock->id;
         $validatedData['transaction_type'] = 'buy';
-
+        
         $pricePerShare = $validatedData['price_per_share'];
         $quantity = $validatedData['quantity'];
         $grossAmount = $pricePerShare * $quantity;
-
-        $brokerCommissionPerShare = $this->getBrokerCommission($pricePerShare, 1);
-        $totalBrokerCommission = $brokerCommissionPerShare * $quantity;
-
+        
+        if($request->has('make_deductions')) {
+            $brokerCommissionPerShare = $this->getBrokerCommission($pricePerShare, 1);
+            $totalBrokerCommission = $brokerCommissionPerShare * $quantity;
+        } else {
+            $totalBrokerCommission = 0;
+            $brokerCommissionPerShare = 0;
+        }
+        
         $totalDeductions = $totalBrokerCommission; // In the future, add more deductions here.
         $netAmount = $grossAmount + $totalDeductions;
+        // dd($netAmount, $request->validated());
         $finalPricePerShare = $pricePerShare + $brokerCommissionPerShare;
         DB::beginTransaction();
 

@@ -18,10 +18,10 @@
                                         class="text-danger">*</span></label>
                                 <select class="form-select @error('portfolio') is-invalid @enderror" name="portfolio"
                                     id="portfolio">
-                                    <option selected disabled>--- Select Portfolio ---</option>
+                                    <option value="" {{ old('portfolio') == '' || old('portfolio') == null ? 'selected' : '' }} disabled>--- Select Portfolio ---</option>
                                     @foreach ($portfolios as $portfolio)
-                                        <option value="{{ $portfolio->slug }}"
-                                            {{ old('portfolio') == $portfolio->slug ? 'selected' : '' }}>
+                                        <option value="{{ $portfolio->public_id }}"
+                                            {{ old('portfolio') == $portfolio->public_id ? 'selected' : '' }}>
                                             {{ $portfolio->name }}
                                         </option>
                                     @endforeach
@@ -41,7 +41,7 @@
                                 <label for="stock" class="form-label">Stock<span class="text-danger">*</span></label>
                                 <select class="form-select @error('stock') is-invalid @enderror" name="stock"
                                     id="stock">
-                                    <option selected disabled>--- Select Stock ---</option>
+                                    <option value="" {{ old('stock') == '' || old('stock') == null ? 'selected' : '' }} disabled>--- Select Stock ---</option>
                                     @foreach ($stocks as $stock)
                                         <option value="{{ $stock->slug }}"
                                             {{ old('stock') == $stock->slug ? 'selected' : '' }}>
@@ -111,9 +111,8 @@
                                     <input id="make_deductions"
                                         class="form-check-input @error('make_deductions') is-invalid @enderror"
                                         name="make_deductions" type="checkbox" value="1"
-                                        {{ old('make_deductions') ? 'checked' : '' }} checked>
-                                    <label for="make_deductions" class="form-check-label">Make Deductions<span
-                                            class="text-danger"> *</span></label>
+                                        {{ old('make_deductions') ? 'checked' : '' }} >
+                                    <label for="make_deductions" class="form-check-label">Make Deductions</label>
                                 </div>
                                 @error('make_deductions')
                                     <span class="invalid-feedback" role="alert">

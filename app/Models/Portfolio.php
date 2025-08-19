@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasPublicId;
 
 class Portfolio extends Model
 {
+    use HasPublicId;
     protected $fillable = ['name', 'description', 'user_id', 'slug'];
 
     public function user()
@@ -20,6 +22,6 @@ class Portfolio extends Model
 
     public function getRouteKeyName()
     {
-        return 'slug';
+        return 'public_id';
     }
 }

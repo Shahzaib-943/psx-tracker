@@ -25,7 +25,7 @@
                     </div>
 
                     @if($netDividend != 0)
-                        <div class="alert alert-success mt-3">
+                        <div wire:loading.class="d-none" class="alert alert-success mt-3">
                             <strong>Net Dividend:</strong> Rs. {{ number_format($netDividend, 2) }}
                         </div>
                     @endif

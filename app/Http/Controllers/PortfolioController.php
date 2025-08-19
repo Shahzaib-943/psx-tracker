@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\Eloquent\Model;
 use Yajra\DataTables\Facades\DataTables;
 use App\Http\Requests\StorePortfolioRequest;
 
@@ -40,7 +41,7 @@ class PortfolioController extends Controller
                     }
                 })
                 ->addColumn('name', function ($row) {
-                    $portfolioUrl = route('portfolios.show', $row->slug);
+                    $portfolioUrl = route('portfolios.show', $row->public_id);
                     $actionButton = '<a  type="button" onclick="window.location.href=\'' . $portfolioUrl . '\'">
                     ' . $row->name . '
                     </a>';
@@ -51,8 +52,8 @@ class PortfolioController extends Controller
                     return Str::limit($row->description, 20, ' ...');
                 })
                 ->addColumn('actionButton', function ($row) {
-                    $editUrl = route('portfolios.edit', $row->slug);
-                    $deleteUrl = route('portfolios.destroy', $row->slug);
+                    $editUrl = route('portfolios.edit', $row->public_id);
+                    $deleteUrl = route('portfolios.destroy', $row->public_id);
                     $actionButtons = '<button type="button" class="btn btn-primary btn-icon" onclick="window.location.href=\'' . $editUrl . '\'">
                     <i data-feather="edit"></i>
                     </button>
@@ -216,16 +217,25 @@ class PortfolioController extends Controller
                 ->addColumn('symbol', fn($holding) => $holding->stock->symbol)
                 ->addColumn('quantity', fn($holding) => $holding->quantity)
                 ->addColumn('avg_price', fn($holding) => formatNumber($holding->average_cost))
-                ->addColumn('current_price', fn($holding) => formatNumber($stockPrices[$holding->stock->symbol]))
-                // ->addColumn('today_pnl', fn($holding) => formatNumber(($holding->stock->current_price - $holding->stock->previous_close) * $holding->quantity))
-                ->addColumn('today_pnl', fn($holding) => formatNumber((0)))
-                ->addColumn('total_pnl', fn($holding) => formatNumber(($holding->stock->current_price * $holding->quantity) - $holding->total_investment))
-                ->addColumn('market_value', fn($holding) => formatNumber($holding->stock->current_price * $holding->quantity))
-                ->addColumn('portfolio_percentage', function ($holding) use ($portfolio) {
-                    $totalMarketValue = $portfolio->holdings->sum(fn($h) => $h->stock->current_price * $h->quantity);
-                    return $totalMarketValue > 0 ? round(($holding->stock->current_price * $holding->quantity) / $totalMarketValue * 100, 2) . '%' : '0%';
+                ->addColumn('current_price', fn($holding) => formatNumber($stockPrices[$holding->stock->symbol] ?? 0))
+                ->addColumn('today_pnl', fn($holding) => formatNumber(0))
+                ->addColumn('total_pnl', function ($holding) use ($stockPrices) {
+                    $currentPrice = $stockPrices[$holding->stock->symbol] ?? 0;
+                    return formatNumber(($currentPrice * $holding->quantity) - $holding->total_investment);
                 })
-                ->rawColumns(['symbol', 'quantity', 'avg_price', 'curr_price', 'today_pnl', 'total_pnl', 'market_value', 'portfolio_percentage'])
+                ->addColumn('market_value', function ($holding) use ($stockPrices) {
+                    $currentPrice = $stockPrices[$holding->stock->symbol] ?? 0;
+                    return formatNumber($currentPrice * $holding->quantity);
+                })
+                ->addColumn('portfolio_percentage', function ($holding) use ($stockPrices, $holdings) {
+                    $currentPrice = $stockPrices[$holding->stock->symbol] ?? 0;
+                    $totalMarketValue = $holdings->sum(fn($h) => ($stockPrices[$h->stock->symbol] ?? 0) * $h->quantity);
+                    return $totalMarketValue > 0 ? round(($currentPrice * $holding->quantity) / $totalMarketValue * 100, 2) . '%' : '0%';
+                })
+                ->addColumn('action', function ($holding) {
+                    return '<button class="btn btn-sm btn-primary">Edit</button> <button class="btn btn-sm btn-danger">Delete</button>';
+                })
+                ->rawColumns(['symbol', 'quantity', 'avg_price', 'current_price', 'today_pnl', 'total_pnl', 'market_value', 'portfolio_percentage', 'action'])
                 ->make(true);
         }
 
@@ -239,18 +249,20 @@ class PortfolioController extends Controller
         $totalReturn = round($investmentAmount > 0 ? ($unrealizedProfit / $investmentAmount) * 100 : 0, 2);
         $deductions = StockTransaction::where('portfolio_id', $portfolio->id)->sum('total_deductions');
         $taxPayable = max($realizedProfit * 0.15, 0);
-
+        $data = [
+            'investmentAmount' => $investmentAmount,
+            'unrealizedProfit' => $unrealizedProfit,
+            'realizedProfit' => $realizedProfit,
+            'todaysReturn' => $todaysReturn,
+            'totalReturn' => $totalReturn,
+            'deductions' => $deductions,
+            'marketValue' => $marketValue,
+            'taxPayable' => $taxPayable
+        ];
         return view('portfolios.show', compact(
             'portfolio',
             'holdings',
-            'investmentAmount',
-            'unrealizedProfit',
-            'realizedProfit',
-            'todaysReturn',
-            'totalReturn',
-            'deductions',
-            'marketValue',
-            'taxPayable'
+            'data'
         ));
     }
 
@@ -298,11 +310,11 @@ class PortfolioController extends Controller
         $user = auth()->user();
 
         if ($user->isAdmin()) {
-            $portfolios = Portfolio::get(['name', 'slug']);
+            $portfolios = Portfolio::get(['name', 'public_id']);
         } elseif ($user->isUSer()) {
-            $portfolios = Portfolio::where('user_id', $user->id)->get(['name', 'slug']);
+            $portfolios = Portfolio::where('user_id', $user->id)->get(['name', 'slug', 'public_id']);
         }
-        $stocks = Stock::get(['name', 'symbol', 'slug']);
+        $stocks = Stock::get(['id', 'name', 'symbol', 'slug']);
         return view('portfolios.trade-stocks', compact('portfolios', 'stocks'));
     }
     //     private function isMarketOpen()
@@ -326,22 +338,22 @@ class PortfolioController extends Controller
 
     private function getStockPrices($portfolio)
     {
-        $isMarketOpen = $this->isMarketOpen();
-        // $isMarketOpen = true;
-        if (!$isMarketOpen) {
-            return Cache::get('portfolio_' . $portfolio->id, []);
-        }
-        $lock = Cache::lock('portfolio_' . $portfolio->id, 60);
-        if (!$lock->get()) {
-            return Cache::get('portfolio_' . $portfolio->id, []);
-        }
+        
+        // $isMarketOpen = $this->isMarketOpen();
+        // // $isMarketOpen = true;
+        // if (!$isMarketOpen) {
+        //     return Cache::get('portfolio_' . $portfolio->id, []);
+        // }
+        // $lock = Cache::lock('portfolio_' . $portfolio->id, 60);
+        // if (!$lock->get()) {
+        //     return Cache::get('portfolio_' . $portfolio->id, []);
+        // }
         try {
             $holdings = $portfolio->holdings()->with('stock')->get();
             $prices = [];
             foreach ($holdings as $holding) {
                 $symbol = $holding->stock->symbol;
                 $response = Http::get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
-
                 if ($response->successful()) {
                     $data = $response->json();
                     $prices[$symbol] = $data['data'][0][1] ?? 0;
@@ -354,7 +366,7 @@ class PortfolioController extends Controller
         } catch (\Exception $e) {
             Log::error("Error fetching stock prices: " . $e->getMessage());
         } finally {
-            $lock->release();
+            // $lock->release();
         }
         return Cache::get('portfolio_' . $portfolio->id, []);
     }

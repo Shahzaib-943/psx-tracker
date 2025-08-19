@@ -67,51 +67,6 @@
 
             <li class="nav-item nav-category">Finance</li>
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('finance-categories.*') ? 'active' : '' }}"
-                    data-bs-toggle="collapse" href="#finance-categories" role="button"
-                    aria-expanded="{{ request()->routeIs('finance-categories.*') ? 'true' : 'false' }}"
-                    aria-controls="finance-categories">
-                    <i class="link-icon mdi mdi-book-open"></i>
-                    <span class="link-title">Categories</span>
-                    <i class="link-arrow" data-feather="chevron-down"></i>
-                </a>
-                <div class="collapse {{ request()->routeIs('finance-categories.*') ? 'show' : '' }}"
-                    id="finance-categories">
-                    <ul class="nav sub-menu">
-                        <li class="nav-item">
-                            <a href="{{ route('finance-categories.create') }}"
-                                class="nav-link {{ request()->routeIs('finance-categories.create') ? 'active' : '' }}">Create</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('finance-categories.index') }}"
-                                class="nav-link {{ request()->routeIs('finance-categories.index') ? 'active' : '' }}">List</a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('finance-records.*') ? 'active' : '' }}"
-                    data-bs-toggle="collapse" href="#finance-records" role="button"
-                    aria-expanded="{{ request()->routeIs('finance-records.*') ? 'true' : 'false' }}"
-                    aria-controls="finance-records">
-                    <i class="link-icon mdi mdi-book-plus"></i>
-                    <span class="link-title">Records</span>
-                    <i class="link-arrow" data-feather="chevron-down"></i>
-                </a>
-                <div class="collapse {{ request()->routeIs('finance-records.*') ? 'show' : '' }}" id="finance-records">
-                    <ul class="nav sub-menu">
-                        <li class="nav-item">
-                            <a href="{{ route('finance-records.create') }}"
-                                class="nav-link {{ request()->routeIs('finance-records.create') ? 'active' : '' }}">Create</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('finance-records.index') }}"
-                                class="nav-link {{ request()->routeIs('finance-records.index') ? 'active' : '' }}">List</a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('portfolios.*') ? 'active' : '' }}"
                     data-bs-toggle="collapse" href="#portfolios" role="button"
                     aria-expanded="{{ request()->routeIs('portfolios.*') ? 'true' : 'false' }}"

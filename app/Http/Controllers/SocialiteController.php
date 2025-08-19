@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
-use Exception;
 
 class SocialiteController extends Controller
 {
@@ -23,10 +24,8 @@ class SocialiteController extends Controller
             $finduser = User::where('google_id', $user->id)->first();
 
             if ($finduser) {
-
                 Auth::login($finduser);
-                return redirect()->intended('home');
-
+                return to_route('home');
             } else {
                 $newUser = User::updateOrCreate(['email' => $user->email], [
                     'name' => $user->name,
@@ -35,8 +34,6 @@ class SocialiteController extends Controller
                 ]);
 
                 Auth::login($newUser);
-
-                // return redirect()->intended('home');
                 return to_route('home');
             }
 

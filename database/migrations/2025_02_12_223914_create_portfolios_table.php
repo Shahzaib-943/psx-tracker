@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('portfolios', function (Blueprint $table) {
             $table->id();
+            $table->string('public_id')->unique();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('slug')->unique();

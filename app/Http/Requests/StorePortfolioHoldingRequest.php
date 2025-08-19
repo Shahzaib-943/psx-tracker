@@ -20,7 +20,7 @@ class StorePortfolioHoldingRequest extends CustomFormRequest
     public function rules(): array
     {
         return [
-            'portfolio' => ['required', 'exists:portfolios,slug'],
+            'portfolio' => ['required', 'exists:portfolios,public_id'],
             'stock' => ['required', 'exists:stocks,slug'],
             'quantity' => ['required', 'integer', 'min:1'],
             'price_per_share' => ['required', 'numeric', 'min:0.01'],

@@ -19,7 +19,7 @@ use App\Http\Controllers\FinanceRecordController;
 use App\Http\Controllers\FinanceCategoryController;
 use App\Http\Controllers\PortfolioHoldingController;
 
-Auth::routes(['register' => false]);
+Auth::routes(['register' => true]);
 
 Route::get('/', function () {
     //     $response = Http::get('https://dps.psx.com.pk/symbols');
@@ -40,7 +40,7 @@ Route::get('/', function () {
 //                 ]);
 //             }
 //         }
-Log::info("hereeeeeeeeeee00");
+Log::info("hell");
     return view('auth.login');
 });
 

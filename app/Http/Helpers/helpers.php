@@ -15,12 +15,24 @@ function formatNumber($number)
 if (!function_exists('getProfitLossClass')) {
     function getProfitLossClass($value)
     {
-        return $value >= 0 ? 'mdi mdi-trending-up primary-green' : 'mdi mdi-trending-down primary-red';
+        if ($value > 0) {
+            return 'mdi mdi-trending-up primary-green';
+        } elseif ($value < 0) {
+            return 'mdi mdi-trending-down primary-red';
+        } else {
+            return 'mdi mdi-trending-flat primary-gray';
+        }
     }
 }
 if (!function_exists('formatPercentageClass')) {
     function formatPercentageClass($value)
     {
-        return $value >= 0 ? 'badge bg-success' : 'badge bg-danger';
+        if ($value > 0) {
+            return 'badge bg-success';
+        } elseif ($value < 0) {
+            return 'badge bg-danger';
+        } else {
+            return 'badge bg-secondary';
+        }
     }
 }
