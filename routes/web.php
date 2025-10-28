@@ -7,6 +7,7 @@ use App\Livewire\DividendCalculator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EventController;
@@ -66,3 +67,12 @@ if (config('auth.socialite_enabled')) {
 }
 
 Route::get('/dividend-calculator', DividendCalculator::class)->name('dividend.calculator');
+
+Route::get('record', function () {
+    // return redirect('record/' . Str::random(6));
+    return redirect('record/' . random_int(100000, 999999));
+});
+
+Route::get('record/{id}', function (string $id) {
+    return $id;
+});

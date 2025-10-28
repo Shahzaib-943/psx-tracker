@@ -206,6 +206,7 @@ class PortfolioController extends Controller
 
     public function show(Portfolio $portfolio)
     {
+        $this->authorize('view', $portfolio);
         $holdingsQuery = $portfolio->holdings()->with('stock');
         $holdings = $holdingsQuery->get();
         $stockPrices = $this->getStockPrices($portfolio);

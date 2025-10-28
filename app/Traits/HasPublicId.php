@@ -24,8 +24,7 @@ trait HasPublicId
     protected static function generateUniquePublicId(string $modelClass): string
     {
         do {
-            $data = uniqid('', true) . '|' . Str::random(8) . '|' . config('app.key');
-            $id   = substr(hash('sha256', $data), 0, rand(12, 15)); // safer min length = 8
+            $id = Str::random(6);
         } while ($modelClass::where('public_id', $id)->exists());
 
         return $id;
