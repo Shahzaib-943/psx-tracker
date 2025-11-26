@@ -17,8 +17,9 @@ class AdminSeeder extends Seeder
     {
         $user = User::create([
             'name' => 'Shahzaib',
-            'email' => User::EMAIL_ADMIN,
-            'password' => 'admin123'
+            'email' => AppConstant::EMAIL_ADMIN,
+            'password' => 'admin123',
+            'public_id' => generatePublicId(User::class)
         ]);
 
         if($user) {

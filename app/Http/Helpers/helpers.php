@@ -1,5 +1,7 @@
 <?php
 
+use App\Traits\HasPublicId;
+
 function formatNumber($number)
 {
     if ($number >= 1000000000) {
@@ -34,5 +36,12 @@ if (!function_exists('formatPercentageClass')) {
         } else {
             return 'badge bg-secondary';
         }
+    }
+}
+
+if(!function_exists('generatePublicId')) {
+    function generatePublicId($model) {
+        
+        return HasPublicId::generateUniquePublicId($model);
     }
 }

@@ -19,6 +19,7 @@ use App\Http\Controllers\SocialiteController;
 use App\Http\Controllers\FinanceRecordController;
 use App\Http\Controllers\FinanceCategoryController;
 use App\Http\Controllers\PortfolioHoldingController;
+use App\Http\Controllers\SystemSettingController;
 
 Auth::routes(['register' => true]);
 
@@ -41,7 +42,7 @@ Route::get('/', function () {
 //                 ]);
 //             }
 //         }
-Log::info("hell");
+    Log::info("hell");
     return view('auth.login');
 });
 
@@ -57,6 +58,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('portfolio-holdings', PortfolioHoldingController::class);
     Route::resource('finance-categories', FinanceCategoryController::class);
     Route::resource('finance-records', FinanceRecordController::class);
+    Route::resource('system-settings', SystemSettingController::class);
 
 });
 if (config('auth.socialite_enabled')) {

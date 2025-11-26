@@ -21,7 +21,7 @@ trait HasPublicId
     /**
      * Generate a unique, non-reversible public id.
      */
-    protected static function generateUniquePublicId(string $modelClass): string
+    public static function generateUniquePublicId(string $modelClass): string
     {
         do {
             $id = Str::random(6);

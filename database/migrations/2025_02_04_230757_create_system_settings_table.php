@@ -12,8 +12,8 @@ return new class extends Migration {
     {
         Schema::create('system_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('market_open_time');
-            $table->string('market_close_time');
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
             $table->timestamps();
         });
     }

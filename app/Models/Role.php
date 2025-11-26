@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Support\Str;
 use App\Models\Scopes\RoleAccessScope;
+use App\Traits\HasPublicId;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Permission\Models\Permission;
 
 class Role extends Model
 {
-    use HasFactory;
+    use HasFactory, HasPublicId;
 
     protected $table = 'roles';
 

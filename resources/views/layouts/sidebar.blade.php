@@ -19,53 +19,31 @@
                 </a>
             </li>
             @role(\App\Constants\AppConstant::ROLE_ADMIN)
-                <li class="nav-item nav-category">Users Section</li>
+                {{-- <li class="nav-item nav-category">User Section</li> --}}
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" data-bs-toggle="collapse"
-                        href="#users" role="button" aria-expanded="{{ request()->routeIs('users.*') ? 'true' : 'false' }}"
-                        aria-controls="users">
+                    <a class="nav-link {{ request()->routeIs('users.*') || request()->routeIs('roles.*') ? 'active' : '' }}" data-bs-toggle="collapse"
+                        href="#users-roles" role="button" aria-expanded="{{ request()->routeIs('users.*') || request()->routeIs('roles.*') ? 'true' : 'false' }}"
+                        aria-controls="users-roles">
                         <i class="link-icon" data-feather="users"></i>
-                        <span class="link-title">Users</span>
+                        <span class="link-title">Users & Roles</span>
                         <i class="link-arrow" data-feather="chevron-down"></i>
                     </a>
-                    <div class="collapse {{ request()->routeIs('users.*') ? 'show' : '' }}" id="users">
+                    <div class="collapse {{ request()->routeIs('users.*') || request()->routeIs('roles.*') ? 'show' : '' }}" id="users-roles">
                         <ul class="nav sub-menu">
-                            <li class="nav-item">
-                                <a href="{{ route('users.create') }}"
-                                    class="nav-link {{ request()->routeIs('users.create') ? 'active' : '' }}">Create</a>
-                            </li>
                             <li class="nav-item">
                                 <a href="{{ route('users.index') }}"
-                                    class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}">List</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}" data-bs-toggle="collapse"
-                        href="#roles" role="button"
-                        aria-expanded="{{ request()->routeIs('roles.*') ? 'true' : 'false' }}" aria-controls="roles">
-                        <i class="link-icon" data-feather="user-check"></i>
-                        <span class="link-title">Roles</span>
-                        <i class="link-arrow" data-feather="chevron-down"></i>
-                    </a>
-                    <div class="collapse {{ request()->routeIs('roles.*') ? 'show' : '' }}" id="roles">
-                        <ul class="nav sub-menu">
-                            <li class="nav-item">
-                                <a href="{{ route('roles.create') }}"
-                                    class="nav-link {{ request()->routeIs('roles.create') ? 'active' : '' }}">Create</a>
+                                    class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">Users</a>
                             </li>
                             <li class="nav-item">
                                 <a href="{{ route('roles.index') }}"
-                                    class="nav-link {{ request()->routeIs('roles.index') ? 'active' : '' }}">List</a>
+                                    class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}">Roles</a>
                             </li>
                         </ul>
                     </div>
                 </li>
             @endrole
 
-            <li class="nav-item nav-category">Finance</li>
+            {{-- <li class="nav-item nav-category">Finance</li> --}}
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('portfolios.*') ? 'active' : '' }}"
                     data-bs-toggle="collapse" href="#portfolios" role="button"
@@ -92,14 +70,14 @@
                     </ul>
                 </div>
             </li>
-            @role(\App\Constants\AppConstant::ROLE_ADMIN)
-                <li class="nav-item nav-category">Application</li>
-                <li class="nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
-                    <a href="{{ route('home') }}" class="nav-link">
+            @can('view system-settings')
+                {{-- <li class="nav-item nav-category">Application</li> --}}
+                <li class="nav-item {{ request()->routeIs('system-settings.*') ? 'active' : '' }}">
+                    <a href="{{ route('system-settings.index') }}" class="nav-link">
                         <i class="link-icon" data-feather="settings"></i>
                         <span class="link-title">Settings</span>
                     </a>
                 </li>
-            @endrole
+            @endcan
     </div>
 </nav>
