@@ -18,6 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     public const ROLE_ADMIN = "admin";
+    public const ROLE_SUPER_ADMIN = "super_admin";
     public const ROLE_USER = "user";
     public const EMAIL_ADMIN = "admin@gmail.com";
     protected $fillable = [

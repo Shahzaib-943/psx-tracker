@@ -26,12 +26,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function ($user, $ability) {
-            return $user->hasRole(User::ROLE_ADMIN) ? true : null;
+            return $user->hasRole(User::ROLE_SUPER_ADMIN) ? true : null;
         });
 
-        // Explicitly bind the 'permission' route parameter to Spatie's Permission model
-        Route::bind('permission', function ($value) {
-            return Permission::findOrFail($value);
-        });
     }
 }

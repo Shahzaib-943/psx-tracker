@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 use Flasher\Prime\FlasherInterface;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\StoreRoleRequest;
 use App\Services\CreateResourceService;
+use Spatie\Permission\Models\Permission;
 use Yajra\DataTables\Facades\DataTables;
 
 class RoleController extends Controller
@@ -17,6 +18,11 @@ class RoleController extends Controller
     public function __construct(CreateResourceService $createResourceService)
     {
         $this->createResourceService = $createResourceService;
+
+        $this->middleware('permission:view roles')->only('index');
+        $this->middleware('permission:create roles')->only('create', 'store');
+        $this->middleware('permission:edit roles')->only('edit', 'update');
+        $this->middleware('permission:delete roles')->only('destroy');
     }
 
     /**
@@ -51,7 +57,17 @@ class RoleController extends Controller
      */
     public function create(FlasherInterface $flasher)
     {
-        return view('roles.create');
+        $permissions = Permission::get(['id', 'name']);
+        
+        // Group permissions by module (last word in permission name)
+        $groupedPermissions = $permissions->groupBy(function ($permission) {
+            $parts = explode(' ', $permission->name);
+            $module = end($parts);
+            // Convert kebab-case to title case (e.g., "system-settings" -> "System Settings")
+            return ucwords(str_replace('-', ' ', $module));
+        });
+        
+        return view('roles.create', compact('groupedPermissions'));
     }
 
     /**
@@ -76,15 +92,24 @@ class RoleController extends Controller
      */
     public function show(string $id)
     {
-        //
     }
-
+    
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Role $role)
     {
+        $permissions = Permission::get(['id', 'name']);
         
+        // Group permissions by module (last word in permission name)
+        $groupedPermissions = $permissions->groupBy(function ($permission) {
+            $parts = explode(' ', $permission->name);
+            $module = end($parts);
+            // Convert kebab-case to title case (e.g., "system-settings" -> "System Settings")
+            return ucwords(str_replace('-', ' ', $module));
+        });
+        
+        return view('roles.edit', compact('role', 'groupedPermissions'));
     }
 
     /**
