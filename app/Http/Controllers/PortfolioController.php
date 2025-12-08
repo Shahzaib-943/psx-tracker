@@ -41,13 +41,13 @@ class PortfolioController extends Controller
                     }
                 })
                 ->addColumn('name', function ($row) {
-                    $portfolioUrl = route('portfolios.show', $row->public_id);
-                    $actionButton = '<a  type="button" onclick="window.location.href=\'' . $portfolioUrl . '\'">
-                    ' . $row->name . '
-                    </a>';
-                    return $actionButton;
-
+                    return $row->name;
                 })
+                ->setRowAttr([
+                    'data-portfolio-id' => function ($row) {
+                        return $row->public_id;
+                    }
+                ])
                 ->addColumn('description', function ($row) {
                     return Str::limit($row->description, 20, ' ...');
                 })
@@ -80,8 +80,9 @@ class PortfolioController extends Controller
      */
     public function create()
     {
+        $stocks = Stock::get(['id', 'name', 'symbol', 'slug']);
         $users = User::with('role')->get(['id', 'name']);
-        return view('portfolios.create', compact('users'));
+        return view('portfolios.create', compact('users', 'stocks'));
     }
 
     /**

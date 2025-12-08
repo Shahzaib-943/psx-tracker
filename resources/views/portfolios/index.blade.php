@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('page-title', 'Event Types List')
-@section('main-page', 'Event Types')
+@section('page-title', 'Portfolios List')
+@section('main-page', 'Portfolios')
 @section('sub-page', 'List')
 @section('content')
 
@@ -8,9 +8,12 @@
         <div class="col-md-12 ">
             <div class="card">
                 <div class="card-body">
-                    <h6 class="card-title">Data Table</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="card-title mb-0">Portfolios</h6>
+                        <a href="{{ route('portfolios.create') }}" class="btn btn-primary">Create</a>
+                    </div>
                     <div class="table-responsive">
-                        <table id="event-types_dataTable" class="table">
+                        <table id="portfolios_dataTable" class="table">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -66,14 +69,50 @@
                 });
             }
             console.log("columns : ", columns);
-            $('#event-types_dataTable').DataTable({
+            var portfolioBaseUrl = "{{ url('/portfolios') }}";
+            var table = $('#portfolios_dataTable').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: "{{ route('portfolios.index') }}",
                 columns: columns,
                 drawCallback: function(settings) {
                     feather.replace();
+                    // Add portfolio URL to each row
+                    var api = this.api();
+                    api.rows().every(function() {
+                        var row = this.node();
+                        var portfolioId = $(row).data('portfolio-id');
+                        if (portfolioId) {
+                            var portfolioUrl = portfolioBaseUrl + '/' + portfolioId;
+                            $(row).attr('data-portfolio-url', portfolioUrl);
+                        }
+                    });
                 },
+            });
+
+            // Make rows clickable except for action buttons
+            $('#portfolios_dataTable tbody').on('click', 'tr', function(e) {
+                var $target = $(e.target);
+                var $row = $(this);
+                var $clickedCell = $target.closest('td');
+                
+                // Don't navigate if clicking on buttons or in the action column (last column)
+                if ($target.closest('button').length > 0 || $clickedCell.is(':last-child')) {
+                    return;
+                }
+                
+                // Navigate to portfolio URL
+                var portfolioUrl = $row.data('portfolio-url');
+                if (portfolioUrl) {
+                    window.location.href = portfolioUrl;
+                }
+            });
+            
+            // Add cursor pointer style to indicate rows are clickable
+            $('#portfolios_dataTable tbody').on('mouseenter', 'tr', function() {
+                if ($(this).data('portfolio-url')) {
+                    $(this).css('cursor', 'pointer');
+                }
             });
         });
     </script>
