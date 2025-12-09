@@ -235,7 +235,7 @@ class PortfolioController extends Controller
                     return $totalMarketValue > 0 ? round(($currentPrice * $holding->quantity) / $totalMarketValue * 100, 2) . '%' : '0%';
                 })
                 ->addColumn('action', function ($holding) {
-                    return '<button class="btn btn-sm btn-primary">Edit</button> <button class="btn btn-sm btn-danger">Delete</button>';
+                    return '<button class="btn btn-sm btn-primary"><i data-feather="edit"></i></button> <button class="btn btn-sm btn-danger"><i data-feather="trash-2"></i></button>';
                 })
                 ->rawColumns(['symbol', 'quantity', 'avg_price', 'current_price', 'today_pnl', 'total_pnl', 'market_value', 'portfolio_percentage', 'action'])
                 ->make(true);
