@@ -8,10 +8,11 @@
         <div class="col-md-12 ">
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="card-title mb-0">Portfolios</h6>
-                        <a href="{{ route('portfolios.create') }}" class="btn btn-primary">Create</a>
-                    </div>
+                    @can('create portfolios')
+                        <div id="dt-create-btn" class="d-none">
+                            <a href="{{ route('portfolios.create') }}" class="btn btn-primary">Create</a>
+                        </div>
+                    @endcan
                     <div class="table-responsive">
                         <table id="portfolios_dataTable" class="table">
                             <thead>
@@ -19,9 +20,9 @@
                                     <th>#</th>
                                     <th>Name</th>
                                     <th>Description</th>
-                                    @role(\App\Constants\AppConstant::ROLE_ADMIN)
+                                    @can('view user of portfolios')
                                         <th id="user-column-header">User</th>
-                                    @endrole
+                                    @endcan
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -31,7 +32,6 @@
             </div>
         </div>
     </div>
-    <input type="hidden" id="user-role" value="{{ auth()->user()->hasRole('admin') ? 'admin' : 'user' }}">
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
@@ -46,7 +46,8 @@
                 },
                 {
                     data: 'name',
-                    name: 'name'
+                    name: 'name',
+                    searchable: true
                 },
                 {
                     data: 'description',
@@ -68,11 +69,22 @@
                     }
                 });
             }
-            console.log("columns : ", columns);
             var portfolioBaseUrl = "{{ url('/portfolios') }}";
             var table = $('#portfolios_dataTable').DataTable({
                 processing: true,
                 serverSide: true,
+                searching: true,
+                dom: `
+                    <"d-flex justify-content-between align-items-center mb-3"
+                        <"d-flex align-items-center"f>
+                        <"dt-create-wrapper">
+                    >
+                    <"table-responsive"rt>
+                    <"d-flex justify-content-between align-items-center mt-3"
+                        <"dataTables_info"i>
+                        <"dataTables_paginate"p>
+                    >
+                `,
                 ajax: "{{ route('portfolios.index') }}",
                 columns: columns,
                 drawCallback: function(settings) {
@@ -87,6 +99,13 @@
                             $(row).attr('data-portfolio-url', portfolioUrl);
                         }
                     });
+                },
+                initComplete: function () {
+                    let btn = $('#dt-create-btn');
+                    if (btn.length) {
+                        $('.dt-create-wrapper').html(btn.html());
+                        btn.remove();
+                    }
                 },
             });
 

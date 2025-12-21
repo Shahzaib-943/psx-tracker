@@ -25,11 +25,12 @@ class PortfolioController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-        $portfolios = Portfolio::query();
+        $portfolios = Portfolio::with('user');
         if ($user->isUser()) {
-            $portfolios = Portfolio::with('user')->where('user_id', $user->id);
+            $portfolios = $portfolios->where('user_id', $user->id);
         }
         if ($request->ajax()) {
             $table = DataTables::of($portfolios)
@@ -40,29 +41,39 @@ class PortfolioController extends Controller
                         return $row->user->name . ' (' . ucfirst($roleName) . ')';
                     }
                 })
-                ->addColumn('name', function ($row) {
-                    return $row->name;
-                })
                 ->setRowAttr([
                     'data-portfolio-id' => function ($row) {
                         return $row->public_id;
                     }
                 ])
                 ->addColumn('description', function ($row) {
-                    return Str::limit($row->description, 20, ' ...');
+                    return $row->description ? Str::limit($row->description, 20, ' ...') : '-';
                 })
                 ->addColumn('actionButton', function ($row) {
-                    $editUrl = route('portfolios.edit', $row->public_id);
-                    $deleteUrl = route('portfolios.destroy', $row->public_id);
-                    $actionButtons = '<button type="button" class="btn btn-primary btn-icon" onclick="window.location.href=\'' . $editUrl . '\'">
-                    <i data-feather="edit"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger btn-icon delete-button" data-url="' . $deleteUrl . '" data-type="portfolio">
-                        <i data-feather="trash-2"></i>
-                    </button>';
-                    return $actionButtons;
+                    $actionButtons = '';
+                    /** @var \App\Models\User|null $user */
+                    $user = Auth::user();
+                    
+                    // Check if user has permission to edit users using Spatie Permission
+                    if ($user && $user->can('edit portfolios')) {
+                        $editUrl = route('portfolios.edit', $row->public_id);
+                        $actionButtons .= '<button type="button" class="btn btn-primary btn-icon me-2" onclick="window.location.href=\'' . $editUrl . '\'">
+                            <i data-feather="edit"></i>
+                        </button>';
+                    }
+                    
+                    // Check if user has permission to delete users using Spatie Permission
+                    if ($user && $user->can('delete portfolios')) {
+                        $deleteUrl = route('portfolios.destroy', $row->public_id);
+                        $actionButtons .= '<button type="button" class="btn btn-danger btn-icon delete-button" data-url="' . $deleteUrl . '" data-type="portfolio">
+                            <i data-feather="trash-2"></i>
+                        </button>';
+                    }
+                    
+                    return $actionButtons ?: '-';
                 })
                 ->rawColumns(['actionButton', 'name']);
+            /** @var \App\Models\User $user */
             if (!$user->isAdmin()) {
                 $table->removeColumn('user');
                 $table->removeColumn('is_common');
@@ -309,11 +320,12 @@ class PortfolioController extends Controller
 
     public function tradeStocks(Portfolio $portfolio)
     {
-        $user = auth()->user();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
         if ($user->isAdmin()) {
             $portfolios = Portfolio::get(['name', 'public_id']);
-        } elseif ($user->isUSer()) {
+        } elseif ($user->isUser()) {
             $portfolios = Portfolio::where('user_id', $user->id)->get(['name', 'slug', 'public_id']);
         }
         $stocks = Stock::get(['id', 'name', 'symbol', 'slug']);

@@ -67,4 +67,9 @@ class User extends Authenticatable
     {
         return $this->hasRole(self::ROLE_USER);
     }
+
+    public function getRouteKeyName()
+    {
+        return 'public_id';
+    }
 }

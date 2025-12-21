@@ -11,8 +11,8 @@ class SystemSettingController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:view settings')->only('index');
-        $this->middleware('permission:edit settings')->only('edit', 'update');
+        $this->middleware('permission:view system-settings')->only('index');
+        $this->middleware('permission:edit system-settings')->only('edit', 'update');
     }
 
     public function index()
@@ -31,7 +31,6 @@ class SystemSettingController extends Controller
     public function store(StoreSystemSettingRequest $request)
     {
         $validatedData = $request->validated();
-        // dd($validatedData);
         SystemSettings::set('market_opening_time', $validatedData['market_opening_time']);
         SystemSettings::set('market_closing_time', $validatedData['market_closing_time']);
         flash()->success('System settings updated successfully.');

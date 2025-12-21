@@ -1,12 +1,12 @@
 @extends('layouts.app')
-@section('page-title', 'Settings')
-@section('main-page', 'Settings')
+@section('page-title', 'System Settings')
+@section('main-page', 'System Settings')
 {{-- @section('sub-page', 'List') --}}
 @section('content')
 <div class="grid-margin stretch-card">
     <div class="card">
         <div class="card-body">
-            <h6 class="card-title">Settings</h6>
+            <h6 class="card-title">System Settings</h6>
 
             <form class="forms-sample" action="{{ route('system-settings.store') }}" method="POST">
                 @csrf

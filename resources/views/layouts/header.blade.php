@@ -93,14 +93,14 @@
                         </div>
                         <ul class="list-unstyled p-1">
                             <li class="dropdown-item py-2">
-                                <a href="{{ route('profile.show', ['profile' => Auth::user()->id]) }}" class="d-flex align-items-center text-body ms-0 w-100">
+                                <a href="{{ route('profile.edit', ['profile' => Auth::user()->public_id]) }}" class="d-flex align-items-center text-body ms-0 w-100">
                                     <i class="me-2 icon-md" data-feather="user"></i>
                                     <span>Profile</span>
                                 </a>
                             </li>
                             <li class="dropdown-item py-2">
                                 <a href="{{ route('logout') }}" class="d-flex align-items-center text-body ms-0 w-100" onclick="event.preventDefault();
-                        document.getElementById('logout-form').submit();">
+                                    document.getElementById('logout-form').submit();">
                                     <i class="me-2 icon-md" data-feather="log-out"></i>
                                     <span>Log Out</span>
                                 </a>

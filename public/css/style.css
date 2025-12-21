@@ -13,3 +13,21 @@
 .primary-red {
     color: #DC2626;
 }
+
+.dataTables_filter {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+}
+
+.dataTables_filter label {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0;
+}
+
+.dataTables_filter input {
+    margin-left: 0 !important;
+}

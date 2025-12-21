@@ -2,46 +2,36 @@
 
 namespace App\Models;
 
+use Spatie\Permission\Models\Role as SpatieRole;
 use Illuminate\Support\Str;
-use App\Models\Scopes\RoleAccessScope;
 use App\Traits\HasPublicId;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Spatie\Permission\Models\Permission;
 
-class Role extends Model
+class Role extends SpatieRole
 {
-    use HasFactory, HasPublicId;
-
-    protected $table = 'roles';
-
-    protected $fillable = [
-        'name',
-        'role_type',
-    ];
+    use HasPublicId;
 
     protected static function booted()
     {
-        static::addGlobalScope(new RoleAccessScope);
+        static::creating(function ($role) {
+            if (empty($role->public_id)) {
+                $role->public_id = (string) Str::uuid();
+            }
+        });
     }
 
-    public function users()
-    {
-        return $this->hasMany(User::class);
-    }
+    protected $fillable = [
+        'name',
+        'guard_name',
+        'public_id',
+    ];
 
-    public function permissions()
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
     {
-        return $this->belongsToMany(Permission::class);
-    }
-
-    public function has_permission(int $permission_id): bool
-    {
-        return $this->permissions->contains("id", $permission_id);
-    }
-
-    public function role_name()
-    {
-        return Str::title(Str::replace("_", " ", $this->name));
+        return 'public_id';
     }
 }

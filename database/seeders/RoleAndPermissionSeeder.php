@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use App\Constants\AppConstant;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
+use App\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
@@ -39,6 +39,7 @@ class RoleAndPermissionSeeder extends Seeder
             [ 'name' => 'create roles', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
             [ 'name' => 'create portfolios', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
             [ 'name' => 'view portfolios', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            [ 'name' => 'view user of portfolios', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
             [ 'name' => 'edit portfolios', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
             [ 'name' => 'delete portfolios', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
             [ 'name' => 'view system-settings', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
@@ -47,8 +48,14 @@ class RoleAndPermissionSeeder extends Seeder
             [ 'name' => 'create system-settings', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
-        $adminRole = Role::firstOrCreate(['name' => AppConstant::ROLE_ADMIN]);
+        $adminRole = Role::firstOrCreate(['public_id' => generatePublicId(Role::class),'name' => AppConstant::ROLE_ADMIN]);
         $adminRole->givePermissionTo(Permission::all());
-        Role::firstOrCreate(['name' => AppConstant::ROLE_USER]);
+        $userRole = Role::firstOrCreate(['public_id' => generatePublicId(Role::class),'name' => AppConstant::ROLE_USER]);
+        $userRole->givePermissionTo([
+            'view portfolios',
+            'edit portfolios',
+            'delete portfolios',
+            'create portfolios',
+        ]);
     }
 }

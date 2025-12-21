@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
 use Flasher\Prime\FlasherInterface;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreRoleRequest;
 use App\Services\CreateResourceService;
 use Spatie\Permission\Models\Permission;
@@ -31,19 +32,31 @@ class RoleController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $roles = Role::get(['id', 'name']);
+            $roles = Role::get(['id', 'name', 'public_id']);
             return DataTables::of($roles)
                 ->addIndexColumn()
                 ->addColumn('actionButton', function ($row) {
-                    $editUrl = route('roles.edit', $row->id);
-                    $deleteUrl = route('roles.destroy', $row->id);
-                    $actionButtons = '<button type="button" class="btn btn-primary btn-icon" onclick="window.location.href=\'' . $editUrl . '\'">
-                        <i data-feather="edit"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger btn-icon delete-button" data-url="' . $deleteUrl . '" data-type="role">
+                    $actionButtons = '';
+                    /** @var \App\Models\User|null $user */
+                    $user = Auth::user();
+                    
+                    // Check if user has permission to edit users using Spatie Permission
+                    if ($user && $user->can('edit roles')) {
+                        $editUrl = route('roles.edit', $row->public_id);
+                        $actionButtons .= '<button type="button" class="btn btn-primary btn-icon me-2" onclick="window.location.href=\'' . $editUrl . '\'">
+                            <i data-feather="edit"></i>
+                        </button>';
+                    }
+                    
+                    // Check if user has permission to delete users using Spatie Permission
+                    if ($user && $user->can('delete roles')) {
+                        $deleteUrl = route('roles.destroy', $row->public_id);
+                        $actionButtons .= '<button type="button" class="btn btn-danger btn-icon delete-button" data-url="' . $deleteUrl . '" data-type="role">
                             <i data-feather="trash-2"></i>
                         </button>';
-                    return $actionButtons;
+                    }
+                    
+                    return $actionButtons ?: '-';
                 })
                 ->rawColumns(['actionButton'])
                 ->make(true);
@@ -55,7 +68,7 @@ class RoleController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(FlasherInterface $flasher)
+    public function create()
     {
         $permissions = Permission::get(['id', 'name']);
         
@@ -101,23 +114,39 @@ class RoleController extends Controller
     {
         $permissions = Permission::get(['id', 'name']);
         
+        // Get role's assigned permission IDs
+        $rolePermissionIds = $role->permissions->pluck('id')->toArray();
+        
         // Group permissions by module (last word in permission name)
         $groupedPermissions = $permissions->groupBy(function ($permission) {
             $parts = explode(' ', $permission->name);
             $module = end($parts);
-            // Convert kebab-case to title case (e.g., "system-settings" -> "System Settings")
             return ucwords(str_replace('-', ' ', $module));
         });
         
-        return view('roles.edit', compact('role', 'groupedPermissions'));
+        return view('roles.edit', compact('role', 'groupedPermissions', 'rolePermissionIds'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(StoreRoleRequest $request, Role $role)
     {
-        //
+        try {
+        $validatedData = $request->validated();
+        if ($role->update($validatedData)) {
+            $role->permissions()->sync($validatedData['permissions']);
+            flash()->success('Role Updated Successfully.');
+            return to_route('roles.index');
+        } else {
+            flash()->error('An unexpected error occurred. Please try again.');
+            return redirect()->back()->withInput();
+        }
+        } catch (\Exception $e) {
+            Log::error('Role update failed: ' . $e->getMessage());
+            flash()->error('An unexpected error occurred. Please try again.');
+            return redirect()->back()->withInput();
+        }
     }
 
     /**

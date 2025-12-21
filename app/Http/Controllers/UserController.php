@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\StoreUserRequest;
 use App\Services\CreateResourceService;
@@ -18,6 +19,11 @@ class UserController extends Controller
     public function __construct(CreateResourceService $createResourceService)
     {
         $this->createResourceService = $createResourceService;
+
+        $this->middleware('permission:view users')->only('index');
+        $this->middleware('permission:create users')->only('create', 'store');
+        $this->middleware('permission:edit users')->only('edit', 'update');
+        $this->middleware('permission:delete users')->only('destroy');
     }
 
     /**
@@ -26,19 +32,31 @@ class UserController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $users = User::with('roles')->get(['id', 'name', 'email']);
+            $users = User::with('roles')->get(['id', 'name', 'email', 'public_id']);
             return DataTables::of($users)
                 ->addIndexColumn()
                 ->addColumn('actionButton', function ($row) {
-                    $editUrl = route('users.edit', $row->id);
-                    $deleteUrl = route('users.destroy', $row->id);
-                    $actionButtons = '<button type="button" class="btn btn-primary btn-icon" onclick="window.location.href=\'' . $editUrl . '\'">
-                        <i data-feather="edit"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger btn-icon delete-button" data-url="' . $deleteUrl . '" data-type="user">
+                    $actionButtons = '';
+                    /** @var \App\Models\User|null $user */
+                    $user = Auth::user();
+                    
+                    // Check if user has permission to edit users using Spatie Permission
+                    if ($user && $user->can('edit users')) {
+                        $editUrl = route('users.edit', $row->public_id);
+                        $actionButtons .= '<button type="button" class="btn btn-primary btn-icon me-2" onclick="window.location.href=\'' . $editUrl . '\'">
+                            <i data-feather="edit"></i>
+                        </button>';
+                    }
+                    
+                    // Check if user has permission to delete users using Spatie Permission
+                    if ($user && $user->can('delete users')) {
+                        $deleteUrl = route('users.destroy', $row->public_id);
+                        $actionButtons .= '<button type="button" class="btn btn-danger btn-icon delete-button" data-url="' . $deleteUrl . '" data-type="user">
                             <i data-feather="trash-2"></i>
                         </button>';
-                    return $actionButtons;
+                    }
+                    
+                    return $actionButtons ?: '-';
                 })
                 ->addColumn('role_name', function ($row) {
                     return $row->roles->first() ? ucfirst($row->roles->first()->name) : 'N/A';

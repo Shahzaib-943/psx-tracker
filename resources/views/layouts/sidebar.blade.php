@@ -18,7 +18,7 @@
                     <span class="link-title">Dashboard</span>
                 </a>
             </li>
-            @role(\App\Constants\AppConstant::ROLE_ADMIN)
+            @canAny(['view users', 'view roles'])
                 {{-- <li class="nav-item nav-category">User Section</li> --}}
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('users.*') || request()->routeIs('roles.*') ? 'active' : '' }}" data-bs-toggle="collapse"
@@ -30,21 +30,32 @@
                     </a>
                     <div class="collapse {{ request()->routeIs('users.*') || request()->routeIs('roles.*') ? 'show' : '' }}" id="users-roles">
                         <ul class="nav sub-menu">
+                            @can('view users')
                             <li class="nav-item">
                                 <a href="{{ route('users.index') }}"
-                                    class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">Users</a>
+                                class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">Users</a>
                             </li>
-                            <li class="nav-item">
-                                <a href="{{ route('roles.index') }}"
-                                    class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}">Roles</a>
-                            </li>
-                        </ul>
-                    </div>
+                            @endcan
+                            @can('view roles')
+                                <li class="nav-item">
+                                    <a href="{{ route('roles.index') }}"
+                                        class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}">Roles</a>
+                                </li>
+                            @endcan
+                            </ul>
+                        </div>  
                 </li>
-            @endrole
-
-            {{-- <li class="nav-item nav-category">Finance</li> --}}
-            <li class="nav-item">
+            @endcanAny
+            @can('view portfolios')
+                {{-- <li class="nav-item nav-category">Finance</li> --}}
+                <li class="nav-item {{ request()->routeIs('portfolios.*') ? 'active' : '' }}">
+                    <a href="{{ route('portfolios.index') }}" class="nav-link">
+                        <i class="link-icon mdi mdi-book-plus"></i>
+                        <span class="link-title">Portfolios</span>
+                    </a>
+                </li>
+            @endcan
+            {{-- <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('portfolios.*') ? 'active' : '' }}"
                     data-bs-toggle="collapse" href="#portfolios" role="button"
                     aria-expanded="{{ request()->routeIs('portfolios.*') ? 'true' : 'false' }}"
@@ -69,13 +80,13 @@
                         </li>
                     </ul>
                 </div>
-            </li>
+            </li> --}}
             @can('view system-settings')
                 {{-- <li class="nav-item nav-category">Application</li> --}}
                 <li class="nav-item {{ request()->routeIs('system-settings.*') ? 'active' : '' }}">
                     <a href="{{ route('system-settings.index') }}" class="nav-link">
                         <i class="link-icon" data-feather="settings"></i>
-                        <span class="link-title">Settings</span>
+                        <span class="link-title">System Settings</span>
                     </a>
                 </li>
             @endcan
