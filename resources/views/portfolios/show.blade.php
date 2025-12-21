@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    <input type="hidden" id="user-role" value="{{ auth()->user()->hasRole('admin') ? 'admin' : 'user' }}">
+    {{-- <input type="hidden" id="user-role" value="{{ auth()->user()->hasRole('admin') ? 'admin' : 'user' }}"> --}}
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
@@ -58,6 +58,17 @@
             $('#event-types_dataTable').DataTable({
                 processing: true,
                 serverSide: true,
+                dom: `
+                    <"d-flex justify-content-between align-items-center mb-3"
+                        <"d-flex align-items-center"l>
+                        <"d-flex align-items-center ms-auto"f>
+                    >
+                    <"table-responsive"rt>
+                    <"d-flex justify-content-between align-items-center mt-3"
+                        <"dataTables_info"i>
+                        <"dataTables_paginate"p>
+                    >
+                `,
                 ajax: "{{ route('portfolios.show', $portfolio->public_id) }}",
                 columns: columns,
                 drawCallback: function(settings) {

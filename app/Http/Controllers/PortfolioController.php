@@ -343,46 +343,226 @@ class PortfolioController extends Controller
 
     private function isMarketOpen()
     {
-        $setting = SystemSettings::select('market_open_time', 'market_close_time')->first();
-        $marketOpenTime = $setting->market_open_time;
-        $marketCloseTime = $setting->market_close_time;
+        $marketOpeningTime = SystemSettings::get('market_opening_time', '09:00');
+        $marketClosingTime = SystemSettings::get('market_closing_time', '17:00');
         $currentTime = now()->format('H:i');
-        return now()->isWeekday() && $currentTime >= $marketOpenTime && $currentTime <= $marketCloseTime;
+        return now()->isWeekday() && $currentTime >= $marketOpeningTime && $currentTime < $marketClosingTime;
     }
 
     private function getStockPrices($portfolio)
     {
+        $isMarketOpen = $this->isMarketOpen();
         
-        // $isMarketOpen = $this->isMarketOpen();
-        // // $isMarketOpen = true;
-        // if (!$isMarketOpen) {
-        //     return Cache::get('portfolio_' . $portfolio->id, []);
-        // }
-        // $lock = Cache::lock('portfolio_' . $portfolio->id, 60);
-        // if (!$lock->get()) {
-        //     return Cache::get('portfolio_' . $portfolio->id, []);
-        // }
         try {
             $holdings = $portfolio->holdings()->with('stock')->get();
             $prices = [];
+            
             foreach ($holdings as $holding) {
                 $symbol = $holding->stock->symbol;
-                $response = Http::get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
+                
+                // If market is closed, use closing price from database
+                if (!$isMarketOpen) {
+                    $stock = $holding->stock;
+                    $today = now()->format('Y-m-d');
+                    
+                    // Check if stock has today's closing price
+                    $hasTodayPrice = $stock->price_updated_at && 
+                                    $stock->price_updated_at->format('Y-m-d') === $today && 
+                                    $stock->closing_price !== null;
+                    
+                    if ($hasTodayPrice) {
+                        // Use today's closing price
+                        $prices[$symbol] = $stock->closing_price;
+                    } else {
+                        // Stock was added after closing or doesn't have today's price - fetch it now
+                        try {
+                            $response = Http::timeout(10)->get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
+                            if ($response->successful()) {
+                                $data = $response->json();
+                                $price = $data['data'][0][1] ?? 0;
+                                $prices[$symbol] = $price;
+                                
+                                // Save it to database for future use
+                                $stock->closing_price = $price;
+                                $stock->price_updated_at = now();
+                                $stock->save();
+                            } else {
+                                // Fallback to existing closing price or cache
+                                $prices[$symbol] = $stock->closing_price ?? Cache::get("stock_price_{$symbol}", 0);
+                            }
+                        } catch (\Exception $e) {
+                            Log::error("Error fetching price for newly added stock {$symbol}: " . $e->getMessage());
+                            $prices[$symbol] = $stock->closing_price ?? Cache::get("stock_price_{$symbol}", 0);
+                        }
+                    }
+                    continue;
+                }
+                
+                // Market is open - fetch from API
+                $response = Http::timeout(10)->get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
                 if ($response->successful()) {
                     $data = $response->json();
                     $prices[$symbol] = $data['data'][0][1] ?? 0;
                 } else {
                     Log::error("Failed to fetch price for {$symbol}. Response: " . $response->body());
-                    $prices[$symbol] = Cache::get("stock_price_{$symbol}", 0);
+                    // Try to get from cache or database as fallback
+                    $prices[$symbol] = Cache::get("stock_price_{$symbol}", $holding->stock->closing_price ?? 0);
                 }
             }
-            Cache::put('portfolio_' . $portfolio->id, $prices);
         } catch (\Exception $e) {
             Log::error("Error fetching stock prices: " . $e->getMessage());
-        } finally {
-            // $lock->release();
+            // Return cached prices or closing prices as fallback
+            $cachedPrices = Cache::get('portfolio_' . $portfolio->id, []);
+            if (empty($cachedPrices)) {
+                $holdings = $portfolio->holdings()->with('stock')->get();
+                foreach ($holdings as $holding) {
+                    $cachedPrices[$holding->stock->symbol] = $holding->stock->closing_price ?? 0;
+                }
+            }
+            return $cachedPrices;
         }
-        return Cache::get('portfolio_' . $portfolio->id, []);
+    }
+
+    /**
+     * Get portfolio stats for dashboard
+     */
+    public function getStats(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $portfolioId = $request->input('portfolio_id', 'all');
+
+        // Get portfolios based on user role
+        if ($user->isAdmin()) {
+            $portfoliosQuery = Portfolio::with('holdings.stock');
+        } else {
+            $portfoliosQuery = Portfolio::with('holdings.stock')->where('user_id', $user->id);
+        }
+
+        // Get all portfolios for dropdown
+        $allPortfolios = $portfoliosQuery->get(['id', 'name', 'public_id']);
+
+        // Calculate stats
+        if ($portfolioId === 'all') {
+            // Aggregate stats for all portfolios
+            $portfolios = $portfoliosQuery->get();
+            $allHoldings = $portfolios->flatMap->holdings;
+            $investmentAmount = $allHoldings->sum('total_investment');
+            
+            // Get stock prices for all unique stocks
+            $allStocks = $allHoldings->pluck('stock')->unique('id');
+            $stockPrices = [];
+            $isMarketOpen = $this->isMarketOpen();
+            
+            foreach ($allStocks as $stock) {
+                // If market is closed, use closing price from database
+                if (!$isMarketOpen) {
+                    $today = now()->format('Y-m-d');
+                    
+                    // Check if stock has today's closing price
+                    $hasTodayPrice = $stock->price_updated_at && 
+                                    $stock->price_updated_at->format('Y-m-d') === $today && 
+                                    $stock->closing_price !== null;
+                    
+                    if ($hasTodayPrice) {
+                        // Use today's closing price
+                        $stockPrices[$stock->symbol] = $stock->closing_price;
+                    } else {
+                        // Stock was added after closing or doesn't have today's price - fetch it now
+                        try {
+                            $response = Http::timeout(10)->get("https://dps.psx.com.pk/timeseries/int/{$stock->symbol}");
+                            if ($response->successful()) {
+                                $data = $response->json();
+                                $price = $data['data'][0][1] ?? 0;
+                                $stockPrices[$stock->symbol] = $price;
+                                
+                                // Save it to database for future use
+                                $stock->closing_price = $price;
+                                $stock->price_updated_at = now();
+                                $stock->save();
+                            } else {
+                                // Fallback to existing closing price or cache
+                                $stockPrices[$stock->symbol] = $stock->closing_price ?? Cache::get("stock_price_{$stock->symbol}", 0);
+                            }
+                        } catch (\Exception $e) {
+                            Log::error("Error fetching price for newly added stock {$stock->symbol}: " . $e->getMessage());
+                            $stockPrices[$stock->symbol] = $stock->closing_price ?? Cache::get("stock_price_{$stock->symbol}", 0);
+                        }
+                    }
+                    continue;
+                }
+                
+                // Market is open - fetch from API
+                try {
+                    $response = Http::timeout(10)->get("https://dps.psx.com.pk/timeseries/int/{$stock->symbol}");
+                    if ($response->successful()) {
+                        $data = $response->json();
+                        $stockPrices[$stock->symbol] = $data['data'][0][1] ?? 0;
+                        Cache::put("stock_price_{$stock->symbol}", $stockPrices[$stock->symbol], now()->addHours(1));
+                    } else {
+                        $stockPrices[$stock->symbol] = Cache::get("stock_price_{$stock->symbol}", $stock->closing_price ?? 0);
+                    }
+                } catch (\Exception $e) {
+                    $stockPrices[$stock->symbol] = Cache::get("stock_price_{$stock->symbol}", $stock->closing_price ?? 0);
+                }
+            }
+
+            $marketValue = $allHoldings->sum(function ($holding) use ($stockPrices) {
+                $currentPrice = $stockPrices[$holding->stock->symbol] ?? 0;
+                return $currentPrice * $holding->quantity;
+            });
+
+            $realizedProfit = StockTransaction::whereIn('portfolio_id', $portfolios->pluck('id'))
+                ->where('transaction_type', 'sell')
+                ->sum('net_amount');
+
+            $todaysReturn = $allHoldings->sum(function ($holding) {
+                return ($holding->stock->current_price - $holding->stock->previous_close) * $holding->quantity;
+            });
+        } else {
+            // Stats for specific portfolio - find by public_id
+            $portfolio = Portfolio::with('holdings.stock')->where('public_id', $portfolioId)->firstOrFail();
+            $this->authorize('view', $portfolio);
+            
+            $holdings = $portfolio->holdings;
+            $investmentAmount = $holdings->sum('total_investment');
+            $stockPrices = $this->getStockPrices($portfolio);
+            
+            $marketValue = $holdings->sum(function ($holding) use ($stockPrices) {
+                $currentPrice = $stockPrices[$holding->stock->symbol] ?? 0;
+                return $currentPrice * $holding->quantity;
+            });
+
+            $realizedProfit = StockTransaction::where('portfolio_id', $portfolio->id)
+                ->where('transaction_type', 'sell')
+                ->sum('net_amount');
+
+            $todaysReturn = $holdings->sum(function ($holding) {
+                return ($holding->stock->current_price - $holding->stock->previous_close) * $holding->quantity;
+            });
+        }
+
+        $unrealizedProfit = round($marketValue - $investmentAmount, 2);
+        $totalReturn = round($investmentAmount > 0 ? ($unrealizedProfit / $investmentAmount) * 100 : 0, 2);
+
+        $data = [
+            'investmentAmount' => $investmentAmount,
+            'unrealizedProfit' => $unrealizedProfit,
+            'realizedProfit' => $realizedProfit,
+            'todaysReturn' => $todaysReturn,
+            'totalReturn' => $totalReturn,
+            'marketValue' => $marketValue,
+        ];
+
+        return response()->json([
+            'data' => $data,
+            'portfolios' => $allPortfolios->map(function ($portfolio) {
+                return [
+                    'id' => $portfolio->public_id,
+                    'name' => $portfolio->name,
+                ];
+            })->values()->toArray(), // Ensure it's always an array
+        ]);
     }
 
 }

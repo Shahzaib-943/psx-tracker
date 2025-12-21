@@ -13,9 +13,18 @@ class SystemSettingsSeeder extends Seeder
      */
     public function run(): void
     {
-        SystemSettings::create([
-            'market_open_time' => '09:15',
-            'market_close_time' => '17:00',
-        ]);
+        $settings = [
+            [
+                'key' => 'market_opening_time',
+                'value' => '09:00',
+            ],
+            [
+                'key' => 'market_closing_time',
+                'value' => '17:00',
+            ]
+        ];
+        foreach ($settings as $setting) {
+            SystemSettings::create($setting);
+        }
     }
 }

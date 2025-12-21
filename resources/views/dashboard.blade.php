@@ -11,51 +11,29 @@
 
         <div class="row justify-content-center">
             <div id="dashboard-content">
-                <!-- This is where the dashboard content will be updated dynamically after applying filters -->
+                <!-- Portfolio Stats Section -->
                 <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Dashboard Overview</h5>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Portfolio Statistics</h5>
+                        <div class="d-flex align-items-center">
+                            <label for="portfolio-select" class="me-2 mb-0">Portfolio:</label>
+                            <select id="portfolio-select" class="form-select" style="width: auto;">
+                                <option value="all">All Portfolios</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="card-body">
-                        @if (session('status'))
-                            <div class="alert alert-success" role="alert">
-                                {{ session('status') }}
+                        <div id="portfolio-stats-loader" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
                             </div>
-                        @endif
-                        <p class="mb-0">{{ __('You are logged in! Explore your financial summary below.') }}</p>
+                            <p class="mt-2">Loading portfolio statistics...</p>
+                        </div>
+                        <div id="portfolio-stats-content" style="display: none;">
+                            <!-- Portfolio component will be loaded here via AJAX -->
+                        </div>
                     </div>
                 </div>
-
-                @if ($chartData && count($chartData['labels']) > 0)
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <input type="text" id="date-range" class="form-control me-2"
-                                    placeholder="Select Date Range">
-                                <select id="finance-type" class="form-select me-2">
-                                    <option value="">All Types</option>
-                                    @foreach ($financeTypes as $financeType)
-                                        <option value="{{ $financeType->id }}">{{ $financeType->name }}</option>
-                                    @endforeach
-                                </select>
-                                <button id="apply-filter" class="btn btn-primary">Apply Filter</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card shadow-sm">
-                                <div class="card-header bg-secondary text-white">
-                                    <h5 class="card-title mb-0">Finance Overview</h5>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="financeChart" width="400" height="200"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endif
             </div>
 
         </div>
@@ -78,108 +56,203 @@
 
         <script>
             $(document).ready(function() {
-                // Initialize Date Range Picker
-                $('#date-range').daterangepicker({
-                    locale: {
-                        format: 'MMM D, YYYY',
-                        cancelLabel: 'Clear'
-                    },
-                    autoUpdateInput: false,
-                    ranges: {
-                        'Today': [moment(), moment()],
-                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                        'This Month': [moment().startOf('month'), moment().endOf('month')],
-                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1,
-                            'month').endOf('month')],
-                    }
+                // Load portfolio stats on page load
+                loadPortfolioStats('all');
+
+                // Handle portfolio dropdown change
+                $('#portfolio-select').on('change', function() {
+                    const portfolioId = $(this).val();
+                    loadPortfolioStats(portfolioId);
                 });
 
-                // Handle date selection
-                $('#date-range').on('apply.daterangepicker', function(ev, picker) {
-                    $(this).val(picker.startDate.format('MMM D, YYYY') + ' - ' + picker.endDate.format(
-                        'MMM D, YYYY'));
-                });
+                // Function to load portfolio stats via AJAX
+                function loadPortfolioStats(portfolioId) {
+                    $('#portfolio-stats-loader').show();
+                    $('#portfolio-stats-content').hide();
 
-                // Handle clear action
-                $('#date-range').on('cancel.daterangepicker', function() {
-                    $(this).val('');
-                });
-
-
-                // Initialize Date Range Picker
-                $('#apply-filter').on('click', function() {
-                    const dateRange = $('#date-range').val();
-                    const financeType = $('#finance-type').val();
-
-                    // Split date range into start and end dates
-                    const dates = dateRange.split(' - ');
-                    const startDate = dates[0] ? moment(dates[0], 'MMM D, YYYY').format('YYYY-MM-DD') : null;
-                    const endDate = dates[1] ? moment(dates[1], 'MMM D, YYYY').format('YYYY-MM-DD') : null;
-
-                    // Send AJAX request with filters
                     $.ajax({
-                        url: '{{ route('home') }}', // Adjust this route if needed
+                        url: '{{ route('portfolios.stats') }}',
                         type: 'GET',
                         data: {
-                            start_date: startDate,
-                            end_date: endDate,
-                            finance_type: financeType
+                            portfolio_id: portfolioId
                         },
                         success: function(response) {
-                            if (response.chartData && response.chartData.labels.length > 0) {
-                                financeChart.data.labels = response.chartData.labels;
-                                financeChart.data.datasets[0].data = response.chartData.values;
-                                financeChart.data.datasets[0].backgroundColor = response.chartData
-                                    .colors;
-                                financeChart.update();
-                            } else {
-                                // Handle case when no data is returned
-                                alert('No data found for the selected filters.');
+                            console.log('Portfolio stats response:', response);
+                            
+                            // Check if response is valid
+                            if (!response) {
+                                $('#portfolio-stats-loader').hide();
+                                $('#portfolio-stats-content').html(`
+                                    <div class="alert alert-danger text-center">
+                                        <i data-feather="alert-circle" class="me-2"></i>
+                                        <strong>Error loading portfolio data.</strong> Please try again.
+                                    </div>
+                                `).show();
+                                feather.replace();
+                                return;
                             }
+
+                            // Check if user has no portfolios (this should be the only case showing the message)
+                            // Only show message if portfolios array is empty or doesn't exist
+                            const hasPortfolios = response.portfolios && Array.isArray(response.portfolios) && response.portfolios.length > 0;
+                            
+                            if (!hasPortfolios) {
+                                $('#portfolio-stats-loader').hide();
+                                $('.card-header .d-flex').hide(); // Hide dropdown
+                                $('#portfolio-stats-content').html(`
+                                    <div class="alert alert-info text-center">
+                                        <i data-feather="info" class="me-2"></i>
+                                        <strong>No portfolios found.</strong> 
+                                        <a href="{{ route('portfolios.create') }}" class="none-link">Create a portfolio to view statistics.</a>
+                                        <style>
+                                            .none-link {
+                                                color: inherit;
+                                                text-decoration: none;
+                                            }
+                                        </style>
+                                    </div>
+                                `).show();
+                                feather.replace();
+                                return;
+                            }
+                            
+                            // Show dropdown if portfolios exist
+                            $('.card-header .d-flex').show();
+
+                            // Update dropdown options
+                            const select = $('#portfolio-select');
+                            select.empty();
+                            select.append('<option value="all">All Portfolios</option>');
+                            
+                            response.portfolios.forEach(function(portfolio) {
+                                select.append(`<option value="${portfolio.id}">${portfolio.name}</option>`);
+                            });
+                            
+                            // Set selected value
+                            select.val(portfolioId);
+
+                            // Check if data is available (portfolios exist but may have no holdings)
+                            if (!response.data) {
+                                $('#portfolio-stats-loader').hide();
+                                $('#portfolio-stats-content').html(`
+                                    <div class="alert alert-info text-center">
+                                        <i data-feather="info" class="me-2"></i>
+                                        <strong>No portfolio data available.</strong> Add holdings to your portfolios to see statistics.
+                                    </div>
+                                `).show();
+                                feather.replace();
+                                return;
+                            }
+
+                            // Render portfolio component
+                            const portfolioData = response.data;
+                            const componentHtml = `
+                                <div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-primary"><span>Investment Amount</span></h6>
+                                                    <h5>PKR ${formatNumber(portfolioData.investmentAmount)}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-primary">Market Value</h6>
+                                                    <h5><span class="${getProfitLossClass(portfolioData.marketValue)} mx-1"></span>PKR ${formatNumber(portfolioData.marketValue)}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-primary">Unrealized P/L</h6>
+                                                    <h5><span class="${getProfitLossClass(portfolioData.unrealizedProfit)} mx-1"></span>PKR ${formatNumber(portfolioData.unrealizedProfit)} <span class="${formatPercentageClass(portfolioData.totalReturn)}">${portfolioData.totalReturn} %</span></h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-primary">Today's Return (%)</h6>
+                                                    <h5>PKR ${portfolioData.todaysReturn} <span class="badge bg-success">(0.60%)</span></h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-primary" title="Includes Capital Gain & Loss + Dividends">Total Return (%)</h6>
+                                                    <h5><span class="${getProfitLossClass(portfolioData.unrealizedProfit)} mx-1"></span>PKR ${formatNumber(portfolioData.unrealizedProfit)} <span class="${formatPercentageClass(portfolioData.totalReturn)}">${portfolioData.totalReturn} %</span></h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-primary">Payouts</h6>
+                                                    <h5>PKR 0.00</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-4">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-primary">Realized P/L</h6>
+                                                    <h5>PKR ${formatNumber(portfolioData.realizedProfit)}</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+
+                            $('#portfolio-stats-content').html(componentHtml);
+                            $('#portfolio-stats-loader').hide();
+                            $('#portfolio-stats-content').show();
                         },
-                        error: function() {
-                            alert('Failed to fetch data. Please try again.');
+                        error: function(xhr, status, error) {
+                            console.error('Error loading portfolio stats:', error, xhr.responseJSON);
+                            $('#portfolio-stats-loader').hide();
+                            $('#portfolio-stats-content').html(`
+                                <div class="alert alert-danger text-center">
+                                    <i data-feather="alert-circle" class="me-2"></i>
+                                    <strong>Failed to load portfolio statistics.</strong> Please try again.
+                                </div>
+                            `).show();
+                            feather.replace();
                         }
                     });
-                });
+                }
 
-                // Chart Data Initialization
-                const chartData = @json($chartData);
+                // Helper functions (these should match your PHP helper functions)
+                function formatNumber(number) {
+                    if (number >= 1000000000) {
+                        return (number / 1000000000).toFixed(2) + 'B';
+                    } else if (number >= 1000000) {
+                        return (number / 1000000).toFixed(2) + 'M';
+                    } else if (number >= 1000) {
+                        return (number / 1000).toFixed(2) + 'K';
+                    }
+                    return number.toFixed(2);
+                }
 
-                let financeChart;
-                if (chartData && chartData.labels.length > 0) {
-                    const ctx = document.getElementById('financeChart').getContext('2d');
-                    financeChart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: chartData.labels,
-                            datasets: [{
-                                label: 'Amount',
-                                data: chartData.values,
-                                backgroundColor: chartData.colors,
-                                borderColor: '#fff',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            let value = context.raw;
-                                            return `Rs ${value}`;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
+                function getProfitLossClass(value) {
+                    if (value > 0) return 'text-success';
+                    if (value < 0) return 'text-danger';
+                    return 'text-muted';
+                }
+
+                function formatPercentageClass(value) {
+                    if (value > 0) return 'text-success';
+                    if (value < 0) return 'text-danger';
+                    return 'text-muted';
                 }
             });
         </script>

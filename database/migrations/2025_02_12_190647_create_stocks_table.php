@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->string('symbol')->unique();
             $table->string('slug')->unique();
             $table->string('name');
+            $table->decimal('closing_price', 15, 4)->nullable();
+            $table->timestamp('price_updated_at')->nullable();
             $table->timestamps();
         });
     }

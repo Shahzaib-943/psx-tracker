@@ -16,7 +16,7 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         $user = User::create([
-            'name' => 'Shahzaib',
+            'name' => 'Admin',
             'email' => AppConstant::EMAIL_ADMIN,
             'password' => 'admin123',
             'public_id' => generatePublicId(User::class)

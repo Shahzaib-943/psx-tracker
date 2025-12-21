@@ -1,13 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Log;
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Schedule as ScheduleFacade;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote')->hourly();
-
-Artisan::command('test:command', function () {
-    Log::info("command ran");
-})->everyMinute();
+ScheduleFacade::command('stocks:fetch-closing-prices')
+    // ->hourly()
+    ->everyMinute()
+    ->timezone('Asia/Karachi')
+    ->withoutOverlapping();
