@@ -220,11 +220,10 @@ class PortfolioController extends Controller
     {
         $this->authorize('view', $portfolio);
         $holdingsQuery = $portfolio->holdings()->with('stock');
-        $holdings = $holdingsQuery->get();
-        $stockPrices = $this->getStockPrices($portfolio);
-        // dd($stockPrices);
-        $investmentAmount = $holdings->sum('total_investment');
-        if (request()->ajax()) {
+        if (request()->ajax()) { // DataTables request for holdings
+            $holdings = $holdingsQuery->get();
+            $stockPrices = $this->getStockPrices($portfolio);
+            $investmentAmount = $holdings->sum('total_investment');
             return DataTables::of($holdingsQuery)
                 ->addIndexColumn()
                 ->addColumn('symbol', fn($holding) => $holding->stock->symbol)
@@ -252,31 +251,9 @@ class PortfolioController extends Controller
                 ->make(true);
         }
 
-
-        $marketValue = $holdings->sum(fn($holding) => ($stockPrices[$holding->stock->symbol] ?? 0) * $holding->quantity);
-        $unrealizedProfit = round($marketValue - $investmentAmount, 2);
-        $realizedProfit = StockTransaction::where('portfolio_id', $portfolio->id)
-            ->where('transaction_type', 'sell')
-            ->sum('net_amount');
-        $todaysReturn = $holdings->sum(fn($holding) => ($holding->stock->current_price - $holding->stock->previous_close) * $holding->quantity);
-        $totalReturn = round($investmentAmount > 0 ? ($unrealizedProfit / $investmentAmount) * 100 : 0, 2);
-        $deductions = StockTransaction::where('portfolio_id', $portfolio->id)->sum('total_deductions');
-        $taxPayable = max($realizedProfit * 0.15, 0);
-        $data = [
-            'investmentAmount' => $investmentAmount,
-            'unrealizedProfit' => $unrealizedProfit,
-            'realizedProfit' => $realizedProfit,
-            'todaysReturn' => $todaysReturn,
-            'totalReturn' => $totalReturn,
-            'deductions' => $deductions,
-            'marketValue' => $marketValue,
-            'taxPayable' => $taxPayable
-        ];
-        return view('portfolios.show', compact(
-            'portfolio',
-            'holdings',
-            'data'
-        ));
+        // For initial page load, keep it light and load stats asynchronously (similar to dashboard)
+        $holdings = $holdingsQuery->get();
+        return view('portfolios.show', compact('portfolio', 'holdings'));
     }
 
     function formatNumber($number)
@@ -331,15 +308,6 @@ class PortfolioController extends Controller
         $stocks = Stock::get(['id', 'name', 'symbol', 'slug']);
         return view('portfolios.trade-stocks', compact('portfolios', 'stocks'));
     }
-    //     private function isMarketOpen()
-//     {
-//         $now = now();
-//         $openingTime = $now->setTime(9, 30);
-//         $closingTime = $now->setTime(15, 30);
-// dd("own : ", $now, $openingTime, $closingTime);
-
-    //         return $now->isWeekday() && $now->between($openingTime, $closingTime);
-//     }
 
     private function isMarketOpen()
     {
@@ -354,12 +322,11 @@ class PortfolioController extends Controller
         $isMarketOpen = $this->isMarketOpen();
         
         try {
-            $holdings = $portfolio->holdings()->with('stock')->get();
+            $holdings = $portfolio->holdings()->with('stock:id,symbol')->get();
             $prices = [];
             
             foreach ($holdings as $holding) {
                 $symbol = $holding->stock->symbol;
-                
                 // If market is closed, use closing price from database
                 if (!$isMarketOpen) {
                     $stock = $holding->stock;
@@ -397,9 +364,8 @@ class PortfolioController extends Controller
                     }
                     continue;
                 }
-                
                 // Market is open - fetch from API
-                $response = Http::timeout(10)->get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
+                $response = Http::get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
                 if ($response->successful()) {
                     $data = $response->json();
                     $prices[$symbol] = $data['data'][0][1] ?? 0;
@@ -421,6 +387,7 @@ class PortfolioController extends Controller
             }
             return $cachedPrices;
         }
+        return $prices;
     }
 
     /**
@@ -431,6 +398,7 @@ class PortfolioController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $portfolioId = $request->input('portfolio_id', 'all');
+        $format = $request->input('format', 'json'); // 'json' or 'html'
 
         // Get portfolios based on user role
         if ($user->isAdmin()) {
@@ -554,14 +522,27 @@ class PortfolioController extends Controller
             'marketValue' => $marketValue,
         ];
 
+        // Common portfolios list for both JSON and HTML responses
+        $portfoliosList = $allPortfolios->map(function ($portfolio) {
+            return [
+                'id' => $portfolio->public_id,
+                'name' => $portfolio->name,
+            ];
+        })->values()->toArray(); // Ensure it's always an array
+
+        // If format is HTML, render the component and return HTML
+        if ($format === 'html') {
+            $html = view('components.portfolio-component', ['portfolio' => $data])->render();
+            return response()->json([
+                'html' => $html,
+                'portfolios' => $portfoliosList,
+            ]);
+        }
+
+        // Default: return JSON (for dashboard)
         return response()->json([
             'data' => $data,
-            'portfolios' => $allPortfolios->map(function ($portfolio) {
-                return [
-                    'id' => $portfolio->public_id,
-                    'name' => $portfolio->name,
-                ];
-            })->values()->toArray(), // Ensure it's always an array
+            'portfolios' => $portfoliosList,
         ]);
     }
 

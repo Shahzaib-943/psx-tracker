@@ -24,10 +24,7 @@
                     </div>
                     <div class="card-body">
                         <div id="portfolio-stats-loader" class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p class="mt-2">Loading portfolio statistics...</p>
+                            <img src="https://api.iconify.design/svg-spinners:blocks-shuffle-3.svg?color=%23570be5" alt="">
                         </div>
                         <div id="portfolio-stats-content" style="display: none;">
                             <!-- Portfolio component will be loaded here via AJAX -->
@@ -74,11 +71,10 @@
                         url: '{{ route('portfolios.stats') }}',
                         type: 'GET',
                         data: {
-                            portfolio_id: portfolioId
+                            portfolio_id: portfolioId,
+                            format: 'html'
                         },
                         success: function(response) {
-                            console.log('Portfolio stats response:', response);
-                            
                             // Check if response is valid
                             if (!response) {
                                 $('#portfolio-stats-loader').hide();
@@ -131,91 +127,23 @@
                             // Set selected value
                             select.val(portfolioId);
 
-                            // Check if data is available (portfolios exist but may have no holdings)
-                            if (!response.data) {
+                            // If HTML is returned (component), render it directly
+                            if (response.html) {
                                 $('#portfolio-stats-loader').hide();
-                                $('#portfolio-stats-content').html(`
-                                    <div class="alert alert-info text-center">
-                                        <i data-feather="info" class="me-2"></i>
-                                        <strong>No portfolio data available.</strong> Add holdings to your portfolios to see statistics.
-                                    </div>
-                                `).show();
+                                $('#portfolio-stats-content').html(response.html).show();
                                 feather.replace();
                                 return;
                             }
 
-                            // Render portfolio component
-                            const portfolioData = response.data;
-                            const componentHtml = `
-                                <div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-primary"><span>Investment Amount</span></h6>
-                                                    <h5>PKR ${formatNumber(portfolioData.investmentAmount)}</h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-primary">Market Value</h6>
-                                                    <h5><span class="${getProfitLossClass(portfolioData.marketValue)} mx-1"></span>PKR ${formatNumber(portfolioData.marketValue)}</h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-primary">Unrealized P/L</h6>
-                                                    <h5><span class="${getProfitLossClass(portfolioData.unrealizedProfit)} mx-1"></span>PKR ${formatNumber(portfolioData.unrealizedProfit)} <span class="${formatPercentageClass(portfolioData.totalReturn)}">${portfolioData.totalReturn} %</span></h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-3">
-                                        <div class="col-md-4">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-primary">Today's Return (%)</h6>
-                                                    <h5>PKR ${portfolioData.todaysReturn} <span class="badge bg-success">(0.60%)</span></h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-primary" title="Includes Capital Gain & Loss + Dividends">Total Return (%)</h6>
-                                                    <h5><span class="${getProfitLossClass(portfolioData.unrealizedProfit)} mx-1"></span>PKR ${formatNumber(portfolioData.unrealizedProfit)} <span class="${formatPercentageClass(portfolioData.totalReturn)}">${portfolioData.totalReturn} %</span></h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-primary">Payouts</h6>
-                                                    <h5>PKR 0.00</h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-3">
-                                        <div class="col-md-4">
-                                            <div class="card text-center">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-primary">Realized P/L</h6>
-                                                    <h5>PKR ${formatNumber(portfolioData.realizedProfit)}</h5>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-
-                            $('#portfolio-stats-content').html(componentHtml);
+                            // Fallback: if html missing but data present, show generic message
                             $('#portfolio-stats-loader').hide();
-                            $('#portfolio-stats-content').show();
+                            $('#portfolio-stats-content').html(`
+                                <div class="alert alert-info text-center">
+                                    <i data-feather="info" class="me-2"></i>
+                                    <strong>No portfolio data available.</strong>
+                                </div>
+                            `).show();
+                            feather.replace();
                         },
                         error: function(xhr, status, error) {
                             console.error('Error loading portfolio stats:', error, xhr.responseJSON);
@@ -229,30 +157,6 @@
                             feather.replace();
                         }
                     });
-                }
-
-                // Helper functions (these should match your PHP helper functions)
-                function formatNumber(number) {
-                    if (number >= 1000000000) {
-                        return (number / 1000000000).toFixed(2) + 'B';
-                    } else if (number >= 1000000) {
-                        return (number / 1000000).toFixed(2) + 'M';
-                    } else if (number >= 1000) {
-                        return (number / 1000).toFixed(2) + 'K';
-                    }
-                    return number.toFixed(2);
-                }
-
-                function getProfitLossClass(value) {
-                    if (value > 0) return 'text-success';
-                    if (value < 0) return 'text-danger';
-                    return 'text-muted';
-                }
-
-                function formatPercentageClass(value) {
-                    if (value > 0) return 'text-success';
-                    if (value < 0) return 'text-danger';
-                    return 'text-muted';
                 }
             });
         </script>

@@ -40,11 +40,11 @@ class FetchStockPricesAtClose extends Command
         $currentDay = now()->dayOfWeek; // 0 = Sunday, 6 = Saturday
         $today = now()->format('Y-m-d');
 
-        // Check if it's a weekday
-        // if ($currentDay == 0 || $currentDay == 6) {
-        //     $this->info('Market is closed (Weekend). No action taken.');
-        //     return Command::SUCCESS;
-        // }
+        // Check if it's a weekend
+        if ($currentDay == 0 || $currentDay == 6) {
+            $this->info('Market is closed (Weekend). No action taken.');
+            return Command::SUCCESS;
+        }
 
         // Check if market is currently open
         if ($currentTime >= $marketOpeningTime && $currentTime < $marketClosingTime) {
@@ -67,7 +67,7 @@ class FetchStockPricesAtClose extends Command
             $this->info('Market is closed. Fetching closing prices for stocks in portfolio holdings...');
             
             // Get unique stocks that are in portfolio holdings
-            $portfolios = Portfolio::with('holdings.stock')->get();
+            $portfolios = Portfolio::with('holdings:id,portfolio_id,stock_id', 'holdings.stock:id,symbol')->get(['id']);
             $stocksInHoldings = $portfolios->flatMap->holdings->pluck('stock')->unique('id');
             $updatedCount = 0;
             $failedCount = 0;
@@ -83,9 +83,10 @@ class FetchStockPricesAtClose extends Command
                         $closingPrice = $data['data'][0][1] ?? null;
                         
                         if ($closingPrice !== null) {
-                            $stock->closing_price = $closingPrice;
-                            $stock->price_updated_at = now();
-                            $stock->save();
+                            $stock->update([
+                                'closing_price' => $closingPrice,
+                                'price_updated_at' => now()
+                            ]);
                             $updatedCount++;
                         } else {
                             $this->warn("No price data found for {$stock->symbol}");

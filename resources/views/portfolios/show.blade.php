@@ -4,7 +4,19 @@
 @section('sub-page', 'Holdings')
 @section('content')
 
-    <x-portfolio-component :portfolio="$data" />
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Portfolio - {{ $portfolio->name }}</h5>
+        </div>
+        <div class="card-body">
+            <div id="portfolio-show-loader" class="text-center py-5">
+                <img src="https://api.iconify.design/svg-spinners:blocks-shuffle-3.svg?color=%23570be5" alt="">
+            </div>
+            <div id="portfolio-show-content" style="display: none;">
+                <!-- Portfolio stats will be loaded here via AJAX -->
+            </div>
+        </div>
+    </div>
 
     <!-- Data Table -->
     <div class="row mt-4">
@@ -40,6 +52,49 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
         $(document).ready(function() {
+
+            // Load portfolio stats for this specific portfolio via Blade component (async)
+            $('#portfolio-show-loader').show();
+            $('#portfolio-show-content').hide();
+
+            $.ajax({
+                url: '{{ route('portfolios.stats') }}',
+                type: 'GET',
+                data: {
+                    portfolio_id: @json($portfolio->public_id),
+                    format: 'html'
+                },
+                success: function(response) {
+                    if (!response || !response.html) {
+                        $('#portfolio-show-loader').hide();
+                        $('#portfolio-show-content').html(`
+                            <div class="alert alert-info text-center">
+                                <i data-feather="info" class="me-2"></i>
+                                <strong>No portfolio data available.</strong>
+                            </div>
+                        `).show();
+                        feather.replace();
+                        return;
+                    }
+
+                    $('#portfolio-show-content').html(response.html);
+                    $('#portfolio-show-loader').hide();
+                    $('#portfolio-show-content').show();
+                    feather.replace();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading portfolio overview:', error, xhr.responseJSON);
+                    $('#portfolio-show-loader').hide();
+                    $('#portfolio-show-content').html(`
+                        <div class="alert alert-danger text-center">
+                            <i data-feather="alert-circle" class="me-2"></i>
+                            <strong>Failed to load portfolio statistics.</strong> Please try again.
+                        </div>
+                    `).show();
+                    feather.replace();
+                }
+            });
+
             let userRole = @json(auth()->user()->getRoleNames()->first());
             const ADMIN = @json(\App\Constants\AppConstant::ROLE_ADMIN);
             columns = [
