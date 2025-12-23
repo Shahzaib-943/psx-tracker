@@ -343,7 +343,9 @@ class PortfolioController extends Controller
                     } else {
                         // Stock was added after closing or doesn't have today's price - fetch it now
                         try {
-                            $response = Http::timeout(10)->get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
+                            $response = Http::timeout(10)
+                                ->withHeaders(getPsxApiHeaders())
+                                ->get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
                             if ($response->successful()) {
                                 $data = $response->json();
                                 $price = $data['data'][0][1] ?? 0;
@@ -365,7 +367,8 @@ class PortfolioController extends Controller
                     continue;
                 }
                 // Market is open - fetch from API
-                $response = Http::get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
+                $response = Http::withHeaders(getPsxApiHeaders())
+                    ->get("https://dps.psx.com.pk/timeseries/int/{$symbol}");
                 if ($response->successful()) {
                     $data = $response->json();
                     $prices[$symbol] = $data['data'][0][1] ?? 0;
@@ -438,7 +441,9 @@ class PortfolioController extends Controller
                     } else {
                         // Stock was added after closing or doesn't have today's price - fetch it now
                         try {
-                            $response = Http::timeout(10)->get("https://dps.psx.com.pk/timeseries/int/{$stock->symbol}");
+                            $response = Http::timeout(10)
+                                ->withHeaders(getPsxApiHeaders())
+                                ->get("https://dps.psx.com.pk/timeseries/int/{$stock->symbol}");
                             if ($response->successful()) {
                                 $data = $response->json();
                                 $price = $data['data'][0][1] ?? 0;
@@ -462,7 +467,9 @@ class PortfolioController extends Controller
                 
                 // Market is open - fetch from API
                 try {
-                    $response = Http::timeout(10)->get("https://dps.psx.com.pk/timeseries/int/{$stock->symbol}");
+                    $response = Http::timeout(10)
+                        ->withHeaders(getPsxApiHeaders())
+                        ->get("https://dps.psx.com.pk/timeseries/int/{$stock->symbol}");
                     if ($response->successful()) {
                         $data = $response->json();
                         $stockPrices[$stock->symbol] = $data['data'][0][1] ?? 0;

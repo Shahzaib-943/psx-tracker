@@ -45,3 +45,20 @@ if(!function_exists('generatePublicId')) {
         return HasPublicId::generateUniquePublicId($model);
     }
 }
+
+if (!function_exists('getPsxApiHeaders')) {
+    /**
+     * Get browser-like headers for PSX API requests to avoid blocking
+     */
+    function getPsxApiHeaders(): array
+    {
+        return [
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept' => 'application/json, text/plain, */*',
+            'Accept-Language' => 'en-US,en;q=0.9',
+            'Accept-Encoding' => 'gzip, deflate, br',
+            'Referer' => 'https://dps.psx.com.pk/',
+            'Origin' => 'https://dps.psx.com.pk',
+        ];
+    }
+}

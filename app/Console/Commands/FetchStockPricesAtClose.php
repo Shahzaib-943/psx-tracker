@@ -76,7 +76,9 @@ class FetchStockPricesAtClose extends Command
 
             foreach ($stocksInHoldings as $stock) {
                 try {
-                    $response = Http::timeout(10)->get("https://dps.psx.com.pk/timeseries/int/{$stock->symbol}");
+                    $response = Http::timeout(10)
+                        ->withHeaders(getPsxApiHeaders())
+                        ->get("https://dps.psx.com.pk/timeseries/int/{$stock->symbol}");
                     
                     if ($response->successful()) {
                         $data = $response->json();

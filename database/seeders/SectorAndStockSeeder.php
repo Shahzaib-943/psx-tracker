@@ -16,7 +16,9 @@ class SectorAndStockSeeder extends Seeder
      */
     public function run(): void
     {
-        $response = Http::timeout(30)->get('https://dps.psx.com.pk/symbols');
+        $response = Http::timeout(30)
+            ->withHeaders(getPsxApiHeaders())
+            ->get('https://dps.psx.com.pk/symbols');
         
         if (!$response->successful()) {
             $this->command->error("Failed to fetch symbols from API. Status: {$response->status()}");
