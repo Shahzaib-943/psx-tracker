@@ -28,11 +28,8 @@ Route::get('/', function () {
     $response = Http::timeout(10)
                                 ->withHeaders(getPsxApiHeaders())
                                 ->get("https://dps.psx.com.pk/timeseries/int/DCR");
-                            if ($response->successful()) {
-                                $data = $response->json();
-                                $price = $data['data'][0][1] ?? 0;
-                            }
-    dd($price);
+                            
+    dd($response->json());
     return view('auth.login');
 });
 
