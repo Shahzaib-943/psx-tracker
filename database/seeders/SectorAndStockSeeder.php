@@ -16,8 +16,22 @@ class SectorAndStockSeeder extends Seeder
      */
     public function run(): void
     {
-        $response = Http::get('https://dps.psx.com.pk/symbols');
+        $response = Http::timeout(30)->get('https://dps.psx.com.pk/symbols');
+        
+        if (!$response->successful()) {
+            $this->command->error("Failed to fetch symbols from API. Status: {$response->status()}");
+            $this->command->error("Response body: " . $response->body());
+            throw new \Exception("API request failed with status {$response->status()}");
+        }
+        
         $data = $response->json();
+        
+        if (!is_array($data) || empty($data)) {
+            $this->command->error("Invalid or empty response from API.");
+            $this->command->error("Response body: " . $response->body());
+            throw new \Exception("API returned invalid data. Expected array, got: " . gettype($data));
+        }
+        
         $types = array_filter(array_unique(array_column($data, 'sectorName')));
         $sectorIds = [];
         foreach ($types as $type) {
