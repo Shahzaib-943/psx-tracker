@@ -25,9 +25,7 @@ use App\Http\Controllers\PortfolioHoldingController;
 Auth::routes(['register' => true]);
 
 Route::get('/', function () {
-    $response = Http::timeout(10)
-                                ->withHeaders(getPsxApiHeaders())
-                                ->get("https://dps.psx.com.pk/timeseries/int/DCR");
+    $response = Http::get('https://psxterminal.com/api/ticks/REG/DCR');
                             
     dd($response->json());
     return view('auth.login');
