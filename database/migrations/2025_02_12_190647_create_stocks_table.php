@@ -12,12 +12,9 @@ return new class extends Migration {
     {
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sector_id')->constrained()->onDelete('cascade');
+            $table->string('public_id')->unique();
             $table->string('symbol')->unique();
-            $table->string('slug')->unique();
-            $table->string('name');
-            $table->decimal('closing_price', 15, 4)->nullable();
-            $table->timestamp('price_updated_at')->nullable();
+            $table->decimal('price', 15, 4)->nullable();
             $table->timestamps();
         });
     }

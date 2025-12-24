@@ -38,7 +38,7 @@ class PortfolioHoldingController extends Controller
         $validatedData = $request->validated();
         
         $portfolio = Portfolio::where('public_id', $validatedData['portfolio'])->firstOrFail();
-        $stock = Stock::where('slug', $validatedData['stock'])->firstOrFail();
+        $stock = Stock::where('public_id', $validatedData['stock'])->firstOrFail();
         
         $validatedData['portfolio_id'] = $portfolio->id;
         $validatedData['stock_id'] = $stock->id;

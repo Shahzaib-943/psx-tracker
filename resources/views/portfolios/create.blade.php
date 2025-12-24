@@ -18,9 +18,9 @@
                 @csrf
                 <!-- Name Input -->
                 <div class="mb-3">
-                    <label for="name" class="form-label">Category Name<span class="text-danger"> *</span></label>
+                    <label for="name" class="form-label">Name<span class="text-danger"> *</span></label>
                     <input id="name" class="form-control @error('name') is-invalid @enderror" name="name" type="text"
-                        value="{{ old('name') }}" placeholder="Enter category name">
+                        value="{{ old('name') }}" placeholder="Enter portfolio name">
                     @error('name')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>

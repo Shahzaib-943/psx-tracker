@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             UserSeeder::class,
             SystemSettingsSeeder::class,
-            SectorAndStockSeeder::class,
+            StocksSeeder::class,
         ]);
     }
 }

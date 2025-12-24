@@ -25,15 +25,12 @@ use App\Http\Controllers\PortfolioHoldingController;
 Auth::routes(['register' => true]);
 
 Route::get('/', function () {
-    $response = Http::get('https://psxterminal.com/api/ticks/REG/DCR');
-                            
-    dd($response->json());
+    dd(Http::get(config('app.api_base_url') . '/ticks/REG/DCR')->json());
     return view('auth.login');
 });
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('profile', ProfileController::class);
@@ -45,7 +42,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('finance-categories', FinanceCategoryController::class);
     Route::resource('finance-records', FinanceRecordController::class);
     Route::resource('system-settings', SystemSettingController::class);
-
 });
 if (config('auth.socialite_enabled')) {
     Route::controller(SocialiteController::class)->group(function () {

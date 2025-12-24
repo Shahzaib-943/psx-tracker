@@ -43,9 +43,9 @@
                                     id="stock">
                                     <option value="" {{ old('stock') == '' || old('stock') == null ? 'selected' : '' }} disabled>--- Select Stock ---</option>
                                     @foreach ($stocks as $stock)
-                                        <option value="{{ $stock->slug }}"
-                                            {{ old('stock') == $stock->slug ? 'selected' : '' }}>
-                                            {{ $stock->symbol }} | {{ $stock->name }}
+                                        <option value="{{ $stock->public_id }}"
+                                            {{ old('stock') == $stock->public_id ? 'selected' : '' }}>
+                                            {{ $stock->symbol }}
                                         </option>
                                     @endforeach
                                 </select>

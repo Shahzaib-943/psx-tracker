@@ -2,8 +2,6 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
 class StorePortfolioHoldingRequest extends CustomFormRequest
 {
     /**
@@ -21,7 +19,7 @@ class StorePortfolioHoldingRequest extends CustomFormRequest
     {
         return [
             'portfolio' => ['required', 'exists:portfolios,public_id'],
-            'stock' => ['required', 'exists:stocks,slug'],
+            'stock' => ['required', 'exists:stocks,public_id'],
             'quantity' => ['required', 'integer', 'min:1'],
             'price_per_share' => ['required', 'numeric', 'min:0.01'],
             'total_investment' => ['nullable', 'numeric', 'min:0.01'],
