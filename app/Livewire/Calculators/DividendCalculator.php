@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Calculators;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Log;
@@ -15,13 +15,11 @@ class DividendCalculator extends Component
 
     public function updating($property)
     {
-        Log::info("here");
         $this->calculate();
     }
 
     public function updated()
     {
-Log::info("hereeeeeee");
         $this->calculate();
     }
 
@@ -38,7 +36,6 @@ Log::info("hereeeeeee");
 
     public function render()
     {
-        // return view('livewire.dividend-calculator')->layout('layouts.guest');
-        return view('livewire.dividend-calculator');
+        return view('livewire.calculators.dividend-calculator');
     }
 }

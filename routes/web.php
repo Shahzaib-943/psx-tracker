@@ -5,10 +5,10 @@ use App\Models\Sector;
 use App\Models\Portfolio;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-use App\Livewire\DividendCalculator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EventController;
@@ -17,20 +17,22 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\SocialiteController;
+use App\Livewire\Calculators\DividendCalculator;
 use App\Http\Controllers\FinanceRecordController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\FinanceCategoryController;
 use App\Http\Controllers\PortfolioHoldingController;
+use App\Livewire\Calculators\MutualFundsReturnCalculator;
 
 Auth::routes(['register' => true]);
 
-Route::get('/', function () {
-    dd(Http::get(config('app.api_base_url') . '/ticks/REG/DCR')->json());
-    return view('auth.login');
-});
+// Route::get('/', function () {
+//     // dd(Http::get(config('app.api_base_url') . '/ticks/REG/DCR')->json());
+//     return view('auth.login');
+// });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('profile', ProfileController::class);
@@ -51,6 +53,7 @@ if (config('auth.socialite_enabled')) {
 }
 
 Route::get('/dividend-calculator', DividendCalculator::class)->name('dividend.calculator');
+Route::get('/mutual-funds-return-calculator', MutualFundsReturnCalculator::class)->name('mutual-funds-return.calculator');
 
 Route::get('record', function () {
     // return redirect('record/' . Str::random(6));
