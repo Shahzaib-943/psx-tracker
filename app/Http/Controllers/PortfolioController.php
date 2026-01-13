@@ -260,21 +260,11 @@ class PortfolioController extends Controller
                     if($data['st'] === "OPN") {
                         $price = $data['price'];
                         $prices[$symbol] = $price;
-                        
-                        // Cache based on market status
-                        if ($this->isMarketOpen()) {
-                            // Market is open - cache for 1 minute (price changes frequently)
-                            Cache::put("stock_price_{$symbol}", $price, now()->addMinute());
-                        } else {
-                            // Market is closed - cache until next trading day's opening
-                            Cache::put("stock_price_{$symbol}", $price, $this->getNextMarketOpeningTime());
-                        }
+                        Cache::put("stock_price_{$symbol}", $price, now()->addMinute());
                     } elseif($data['st'] === "SUS") {
                         $price = $data['price'];
                         $prices[$symbol] = $price;
-                        
-                        // Cache SUS stocks until next trading day's market opening (price won't change until stock resumes)
-                        Cache::put("stock_price_{$symbol}", $price, $this->getNextMarketOpeningTime());
+                        Cache::put("stock_price_{$symbol}", $price, now()->addMinutes(5));
                     }
                 }
             }
