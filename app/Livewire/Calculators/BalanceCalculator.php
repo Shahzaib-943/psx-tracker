@@ -8,7 +8,7 @@ class BalanceCalculator extends Component
 {
     public $currentBalance;
     public $packagePrice;
-    public $taxRate = 12;
+    public $taxRate = 15;
     public $requiredBalance;
 
     public function updated()
