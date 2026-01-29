@@ -23,7 +23,7 @@ use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\FinanceCategoryController;
 use App\Http\Controllers\PortfolioHoldingController;
 use App\Livewire\Calculators\MutualFundsReturnCalculator;
-
+use App\Livewire\Calculators\BalanceCalculator;
 Auth::routes(['register' => true]);
 
 // Route::get('/', function () {
@@ -54,6 +54,7 @@ if (config('auth.socialite_enabled')) {
 
 Route::get('/dividend-calculator', DividendCalculator::class)->name('dividend.calculator');
 Route::get('/mutual-funds-return-calculator', MutualFundsReturnCalculator::class)->name('mutual-funds-return.calculator');
+Route::get('/balance-calculator', BalanceCalculator::class)->name('balance.calculator');
 
 Route::get('record', function () {
     // return redirect('record/' . Str::random(6));
