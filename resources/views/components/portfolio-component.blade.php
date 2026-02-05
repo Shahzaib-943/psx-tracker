@@ -39,7 +39,8 @@
             <div class="card text-center">
                 <div class="card-body">
                     <h6 class="card-title text-primary">Today's Return (%)</h6>
-                    <h5 title="Rs {{ number_format($portfolio['todaysReturn']) }}">Rs {{ $portfolio['todaysReturn'] }} <span class="badge bg-success">(0.60%)</span></h5>
+                    <h5 title="Rs {{ number_format($portfolio['todaysReturn']) }}"><span class="{{ getProfitLossClass($portfolio['todaysReturn']) }} mx-1"></span> Rs {{ formatNumber($portfolio['todaysReturn']) }}
+                        <span class="{{ formatPercentageClass($portfolio['todaysReturnPercentage']) }}"> {{ $portfolio['todaysReturnPercentage'] }}  %</span></h5>
                 </div>
             </div>
         </div>
