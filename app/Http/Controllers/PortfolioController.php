@@ -53,7 +53,7 @@ class PortfolioController extends Controller
                     $actionButtons = '';
                     /** @var \App\Models\User|null $user */
                     $user = Auth::user();
-                    
+
                     // Check if user has permission to edit users using Spatie Permission
                     if ($user && $user->can('edit portfolios')) {
                         $editUrl = route('portfolios.edit', $row->public_id);
@@ -61,7 +61,7 @@ class PortfolioController extends Controller
                             <i data-feather="edit"></i>
                         </button>';
                     }
-                    
+
                     // Check if user has permission to delete users using Spatie Permission
                     if ($user && $user->can('delete portfolios')) {
                         $deleteUrl = route('portfolios.destroy', $row->public_id);
@@ -69,7 +69,7 @@ class PortfolioController extends Controller
                             <i data-feather="trash-2"></i>
                         </button>';
                     }
-                    
+
                     return $actionButtons ?: '-';
                 })
                 ->rawColumns(['actionButton', 'name']);
@@ -133,7 +133,7 @@ class PortfolioController extends Controller
                 ->addColumn('quantity', fn($holding) => $holding->quantity)
                 ->addColumn('avg_price', fn($holding) => formatNumber($holding->average_cost))
                 ->addColumn('current_price', fn($holding) => formatNumber($stockPrices[$holding->stock->symbol]['price'] ?? 0))
-                ->addColumn('today_pnl', fn($holding) => formatNumber(round(($holding->quantity *  $stockPrices[$holding->stock->symbol]['change'] ?? 0), 2)))
+                ->addColumn('today_pnl', fn($holding) => formatNumber(round(($holding->quantity * $stockPrices[$holding->stock->symbol]['change'] ?? 0), 2)))
                 ->addColumn('total_pnl', function ($holding) use ($stockPrices) {
                     $currentPrice = $stockPrices[$holding->stock->symbol]['price'] ?? 0;
                     return formatNumber(($currentPrice * $holding->quantity) - $holding->total_investment);
@@ -147,8 +147,33 @@ class PortfolioController extends Controller
                     $totalMarketValue = $holdings->sum(fn($h) => ($stockPrices[$h->stock->symbol]['price'] ?? 0) * $h->quantity);
                     return $totalMarketValue > 0 ? round(($currentPrice * $holding->quantity) / $totalMarketValue * 100, 2) . '%' : '0%';
                 })
+                // ->addColumn('action', function ($holding) {
+                //     return '<button class="btn btn-sm btn-primary"><i data-feather="edit"></i></button> <button class="btn btn-sm btn-danger"><i data-feather="trash-2"></i></button>';
+                // })
                 ->addColumn('action', function ($holding) {
-                    return '<button class="btn btn-sm btn-primary"><i data-feather="edit"></i></button> <button class="btn btn-sm btn-danger"><i data-feather="trash-2"></i></button>';
+                    return '<button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            Actions
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item text-success" href="#" 
+                    onclick="openTransactionModal(\'buy\', \'' . $holding->symbol . '\', \'' . $holding->public_id . '\', ' . $holding->quantity . ')">
+                    <i data-feather="trending-up"></i> Buy More
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item text-danger" href="#" 
+                    onclick="openTransactionModal(\'sell\', \'' . $holding->symbol . '\', \'' . $holding->public_id . '\', ' . $holding->quantity . ')">
+                    <i data-feather="trending-down"></i> Sell
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item text-info" href="#" 
+                    onclick="openDividendModal(\'' . $holding->symbol . '\', \'' . $holding->public_id . '\', ' . $holding->quantity . ')">
+                    <i data-feather="dollar-sign"></i> Add Dividend
+                </a>
+            </li>
+        </ul>';
                 })
                 ->rawColumns(['symbol', 'quantity', 'avg_price', 'current_price', 'today_pnl', 'total_pnl', 'market_value', 'portfolio_percentage', 'action'])
                 ->make(true);
@@ -228,7 +253,7 @@ class PortfolioController extends Controller
     {
         $marketOpeningTime = SystemSettings::get('market_opening_time', '09:00');
         $nextOpeningDateTime = now()->setTimeFromTimeString($marketOpeningTime);
-        
+
         // If market already opened today, move to next weekday's opening
         if (now() >= $nextOpeningDateTime) {
             $nextOpeningDateTime = $nextOpeningDateTime->addDay();
@@ -237,7 +262,7 @@ class PortfolioController extends Controller
                 $nextOpeningDateTime = $nextOpeningDateTime->addDay();
             }
         }
-        
+
         return $nextOpeningDateTime;
     }
 
@@ -246,10 +271,10 @@ class PortfolioController extends Controller
         try {
             $holdings = $portfolio->holdings(['id', 'stock_id'])->with('stock:id,symbol')->get();
             $prices = [];
-            
+
             foreach ($holdings as $holding) {
                 $symbol = $holding->stock->symbol;
-                if(Cache::has("stock_data_{$symbol}")) {
+                if (Cache::has("stock_data_{$symbol}")) {
                     $prices[$symbol] = Cache::get("stock_data_{$symbol}");
                     continue;
                 }
@@ -257,7 +282,7 @@ class PortfolioController extends Controller
                 $response = Http::get(config('app.api_base_url') . '/ticks/REG/' . $symbol);
                 if ($response->successful()) {
                     $data = $response->json()['data'];
-                    if($data['st'] === "OPN") {
+                    if ($data['st'] === "OPN") {
                         $data = [
                             'price' => $data['price'],
                             'change' => $data['change'],
@@ -265,7 +290,7 @@ class PortfolioController extends Controller
                         ];
                         $prices[$symbol] = $data;
                         Cache::put("stock_data_{$symbol}", $data, now()->addMinute());
-                    } elseif($data['st'] === "SUS") {
+                    } elseif ($data['st'] === "SUS") {
                         $data = [
                             'price' => $data['price'],
                             'change' => $data['change'],
@@ -315,19 +340,19 @@ class PortfolioController extends Controller
     //         $portfolios = $portfoliosQuery->get();
     //         $allHoldings = $portfolios->flatMap->holdings;
     //         $investmentAmount = $allHoldings->sum('total_investment');
-            
+
     //         $allStocks = $allHoldings->pluck('stock')->unique('id');
     //         $stockPrices = [];
     //         $isMarketOpen = $this->isMarketOpen();
-            
+
     //         foreach ($allStocks as $stock) {
     //             if (!$isMarketOpen) {
     //                 $today = now()->format('Y-m-d');
-                    
+
     //                 $hasTodayPrice = $stock->price_updated_at && 
     //                                 $stock->price_updated_at->format('Y-m-d') === $today && 
     //                                 $stock->closing_price !== null;
-                    
+
     //                 if ($hasTodayPrice) {
     //                     $stockPrices[$stock->symbol] = $stock->closing_price;
     //                 } else {
@@ -339,7 +364,7 @@ class PortfolioController extends Controller
     //                             $data = $response->json();
     //                             $price = $data['data'][0][1] ?? 0;
     //                             $stockPrices[$stock->symbol] = $price;
-                                
+
     //                             $stock->closing_price = $price;
     //                             $stock->price_updated_at = now();
     //                             $stock->save();
@@ -353,7 +378,7 @@ class PortfolioController extends Controller
     //                 }
     //                 continue;
     //             }
-                
+
     //             try {
     //                 $response = Http::timeout(10)
     //                     ->withHeaders(getPsxApiHeaders())
@@ -385,11 +410,11 @@ class PortfolioController extends Controller
     //     } else {
     //         $portfolio = Portfolio::with('holdings.stock')->where('public_id', $portfolioId)->firstOrFail();
     //         $this->authorize('view', $portfolio);
-            
+
     //         $holdings = $portfolio->holdings;
     //         $investmentAmount = $holdings->sum('total_investment');
     //         $stockPrices = $this->getStockPrices($portfolio);
-            
+
     //         $marketValue = $holdings->sum(function ($holding) use ($stockPrices) {
     //             $currentPrice = $stockPrices[$holding->stock->symbol] ?? 0;
     //             return $currentPrice * $holding->quantity;
@@ -483,11 +508,11 @@ class PortfolioController extends Controller
         } else {
             $portfolio = Portfolio::with('holdings.stock')->where('public_id', $portfolioId)->firstOrFail();
             $this->authorize('view', $portfolio);
-            
+
             $holdings = $portfolio->holdings;
             $investmentAmount = $holdings->sum('total_investment');
             $stockPrices = $this->getStockPrices($portfolio);
-            
+
             $marketValue = $holdings->sum(function ($holding) use ($stockPrices) {
                 $currentPrice = $stockPrices[$holding->stock->symbol]['price'] ?? 0;
                 return $currentPrice * $holding->quantity;

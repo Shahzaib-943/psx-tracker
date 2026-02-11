@@ -14,16 +14,17 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\HostelController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DividendController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\SocialiteController;
+use App\Livewire\Calculators\BalanceCalculator;
 use App\Livewire\Calculators\DividendCalculator;
 use App\Http\Controllers\FinanceRecordController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\FinanceCategoryController;
 use App\Http\Controllers\PortfolioHoldingController;
 use App\Livewire\Calculators\MutualFundsReturnCalculator;
-use App\Livewire\Calculators\BalanceCalculator;
 Auth::routes(['register' => true]);
 
 // Route::get('/', function () {
@@ -44,6 +45,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('finance-categories', FinanceCategoryController::class);
     Route::resource('finance-records', FinanceRecordController::class);
     Route::resource('system-settings', SystemSettingController::class);
+
+    Route::resource('dividends', DividendController::class);
 });
 if (config('auth.socialite_enabled')) {
     Route::controller(SocialiteController::class)->group(function () {
